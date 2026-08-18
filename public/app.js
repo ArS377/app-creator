@@ -1,4 +1,4 @@
-import { createSuccessfulTrace, formatMilliseconds } from "./js/trace-model.js";
+import { createFaultedTrace, createSuccessfulTrace, formatMilliseconds } from "./js/trace-model.js";
 
 const panelTabs = document.querySelectorAll("[data-panel-target]");
 const panels = document.querySelectorAll("[data-panel]");
@@ -13,6 +13,12 @@ const timelineHandle = document.querySelector(".timeline-handle");
 const timelineEvents = document.querySelector(".timeline-events");
 const timelineTitle = document.querySelector("#timeline-title");
 const timelineOutput = document.querySelector(".timeline-heading output");
+const faultSwitch = document.querySelector("[data-fault-switch]");
+const faultDock = document.querySelector(".fault-dock");
+const diagnosisEmpty = document.querySelector("[data-diagnosis-empty]");
+const diagnosisLoading = document.querySelector("[data-diagnosis-loading]");
+const diagnosisResult = document.querySelector("[data-diagnosis-result]");
+const investigatorMode = document.querySelector("[data-investigator-mode]");
 const tutorial = document.querySelector(".tutorial");
 const tutorialContent = [
   {
@@ -62,6 +68,7 @@ let tracePlaybackTimer;
 let activeTrace = null;
 let activeEventIndex = -1;
 let savedFindingCount = 3;
+let faultArmed = false;
 
 function announce(message) {
   window.clearTimeout(announcementTimer);
@@ -86,6 +93,7 @@ function renderTimelineEvents(trace) {
       const time = document.createElement("span");
 
       button.className = "timeline-event";
+      button.classList.toggle("is-error", event.level === "error");
       button.type = "button";
       button.dataset.eventIndex = String(index);
       button.setAttribute("aria-label", `${event.title}, ${formatMilliseconds(event.at)}`);
@@ -125,6 +133,10 @@ function renderTraceEvent(index) {
       .some((candidate) => candidate.node === node.dataset.node);
     node.classList.toggle("is-observed", observed);
     node.classList.toggle("is-active", node.dataset.node === event.node);
+    node.classList.toggle(
+      "is-error",
+      node.dataset.node === event.node && event.level === "error"
+    );
   });
 
   document.querySelectorAll("[data-edge]").forEach((edge) => {
@@ -133,6 +145,7 @@ function renderTraceEvent(index) {
       .some((candidate) => candidate.edge === edge.dataset.edge);
     edge.classList.toggle("is-observed", observed);
     edge.classList.toggle("is-active", edge.dataset.edge === event.edge);
+    edge.classList.toggle("is-error", edge.dataset.edge === event.edge && event.level === "error");
   });
 
   timelineEvents.querySelectorAll(".timeline-event").forEach((button, buttonIndex) => {
@@ -142,6 +155,66 @@ function renderTraceEvent(index) {
       button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
     }
   });
+}
+
+function renderDiagnosis(diagnosis) {
+  diagnosisLoading.hidden = true;
+  diagnosisResult.hidden = false;
+  investigatorMode.textContent = diagnosis.mode === "ai" ? "AI reviewed" : "Local evidence";
+  document.querySelector("[data-diagnosis-summary]").textContent = diagnosis.summary;
+  document.querySelector("[data-diagnosis-cause]").textContent = diagnosis.cause;
+  document.querySelector("[data-diagnosis-effect]").textContent = diagnosis.effect;
+  document.querySelector("[data-diagnosis-next]").textContent = diagnosis.nextStep;
+
+  const evidenceContainer = document.querySelector("[data-diagnosis-evidence]");
+  evidenceContainer.replaceChildren(
+    ...diagnosis.evidence.map((evidence) => {
+      const eventIndex = activeTrace.events.findIndex((event) => event.id === evidence.eventId);
+      const button = document.createElement("button");
+      const eventId = document.createElement("span");
+      const claim = document.createElement("p");
+
+      button.type = "button";
+      button.className = "evidence-link";
+      eventId.textContent = evidence.eventId;
+      claim.textContent = evidence.claim;
+      button.append(eventId, claim);
+      button.addEventListener("click", () => {
+        if (eventIndex >= 0) renderTraceEvent(eventIndex);
+      });
+      return button;
+    })
+  );
+
+  const firstErrorIndex = activeTrace.events.findIndex(
+    (event) => event.id === diagnosis.firstAbnormalEventId
+  );
+  if (firstErrorIndex >= 0) renderTraceEvent(firstErrorIndex);
+  setJourneyStep(3);
+}
+
+async function investigateActiveTrace() {
+  diagnosisEmpty.hidden = true;
+  diagnosisResult.hidden = true;
+  diagnosisLoading.hidden = false;
+  investigatorMode.textContent = "Reviewing";
+
+  try {
+    const response = await fetch("/api/investigate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ trace: activeTrace })
+    });
+    if (!response.ok) throw new Error("The investigator could not read this trace.");
+    renderDiagnosis(await response.json());
+  } catch {
+    diagnosisLoading.hidden = true;
+    diagnosisEmpty.hidden = false;
+    investigatorMode.textContent = "Unavailable";
+    diagnosisEmpty.querySelector("h3").textContent = "Investigator unavailable";
+    diagnosisEmpty.querySelector("p").textContent =
+      "The trace is still available. Restart the app server to restore the evidence review.";
+  }
 }
 
 function finishSuccessfulSave() {
@@ -163,6 +236,14 @@ function finishSuccessfulSave() {
   announce("Finding saved. Scrub the trace to inspect each boundary.");
 }
 
+function finishFaultedSave() {
+  saveButton.disabled = false;
+  saveButton.classList.remove("is-saving");
+  saveButton.textContent = "Retry save";
+  announce("The test fault rejected the save. The investigator is checking why.");
+  investigateActiveTrace();
+}
+
 function playTrace(trace) {
   window.clearTimeout(tracePlaybackTimer);
   activeTrace = trace;
@@ -180,7 +261,8 @@ function playTrace(trace) {
       const nextTime = trace.events[nextIndex + 1].at;
       tracePlaybackTimer = window.setTimeout(advance, Math.max(180, (nextTime - currentTime) * 5));
     } else {
-      finishSuccessfulSave();
+      if (trace.status === "error") finishFaultedSave();
+      else finishSuccessfulSave();
     }
   }
 
@@ -191,11 +273,23 @@ findingForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!findingForm.reportValidity() || saveButton.disabled) return;
 
-  setJourneyStep(1);
+  setJourneyStep(faultArmed ? 2 : 1);
   saveButton.disabled = true;
   saveButton.classList.add("is-saving");
   saveButton.textContent = "Saving";
-  playTrace(createSuccessfulTrace());
+  playTrace(faultArmed ? createFaultedTrace() : createSuccessfulTrace());
+});
+
+faultSwitch.addEventListener("click", () => {
+  faultArmed = !faultArmed;
+  faultSwitch.setAttribute("aria-checked", String(faultArmed));
+  faultDock.classList.toggle("is-armed", faultArmed);
+  setJourneyStep(faultArmed ? 2 : 1);
+  announce(
+    faultArmed
+      ? "Fault armed for this session. The next database write will be rejected."
+      : "Fault cleared. The next database write can complete normally."
+  );
 });
 
 timelineInput.addEventListener("input", () => {

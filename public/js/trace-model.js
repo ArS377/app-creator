@@ -64,12 +64,95 @@ const successfulEvents = [
   }
 ];
 
+const faultedEvents = [
+  {
+    id: "fault-evt-01",
+    at: 0,
+    node: "browser",
+    kind: "interaction",
+    level: "info",
+    title: "Save submitted",
+    detail: "The browser accepted the finding and started a new trace.",
+    edge: null
+  },
+  {
+    id: "fault-evt-02",
+    at: 41,
+    node: "api",
+    kind: "request",
+    level: "info",
+    title: "Request sent",
+    detail: "POST /api/findings reached the Express route.",
+    edge: "browser-api"
+  },
+  {
+    id: "fault-evt-03",
+    at: 73,
+    node: "api",
+    kind: "handler",
+    level: "info",
+    title: "Input accepted",
+    detail: "The route validated the title and source fields.",
+    edge: null
+  },
+  {
+    id: "fault-evt-04",
+    at: 118,
+    node: "database",
+    kind: "database",
+    level: "error",
+    title: "Write rejected",
+    detail: "Fault Lab rejected the database write before any record was inserted.",
+    edge: "api-database"
+  },
+  {
+    id: "fault-evt-05",
+    at: 146,
+    node: "stream",
+    kind: "telemetry",
+    level: "info",
+    title: "Failure published",
+    detail: "The session-scoped trace stream delivered the rejected-write event.",
+    edge: "api-stream"
+  },
+  {
+    id: "fault-evt-06",
+    at: 184,
+    node: "api",
+    kind: "response",
+    level: "error",
+    title: "Error returned",
+    detail: "The API returned 503 and did not report a successful save.",
+    edge: "browser-api"
+  },
+  {
+    id: "fault-evt-07",
+    at: 221,
+    node: "browser",
+    kind: "render",
+    level: "error",
+    title: "Save failed visibly",
+    detail: "The browser kept the form intact and showed that the finding was not saved.",
+    edge: "browser-api"
+  }
+];
+
 export function createSuccessfulTrace() {
   return {
     id: `trc-${Date.now().toString(36)}`,
     status: "success",
     duration: successfulEvents.at(-1).at,
     events: successfulEvents.map((event) => ({ ...event }))
+  };
+}
+
+export function createFaultedTrace() {
+  return {
+    id: `trc-${Date.now().toString(36)}`,
+    status: "error",
+    fault: "reject-database-write",
+    duration: faultedEvents.at(-1).at,
+    events: faultedEvents.map((event) => ({ ...event }))
   };
 }
 

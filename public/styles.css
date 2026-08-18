@@ -548,6 +548,22 @@ input:focus-visible {
   color: var(--teal);
 }
 
+.system-node.is-error,
+.system-node.is-error.is-active {
+  border-color: var(--fault);
+  background: var(--fault-soft);
+  box-shadow: 0 0 0 3px rgba(200, 70, 60, 0.12), 0 12px 24px rgba(70, 51, 39, 0.1);
+}
+
+.system-node.is-error .node-kicker {
+  color: var(--fault);
+}
+
+.map-wires path.is-error,
+.map-wires path.is-error.is-active {
+  stroke: var(--fault);
+}
+
 .system-node strong {
   margin: 3px 0;
   font-size: 0.8rem;
@@ -673,14 +689,16 @@ input:focus-visible {
   flex-direction: column;
 }
 
-.investigator-mark {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid var(--iris);
-  border-radius: 50%;
+.investigator-mode {
+  padding: 5px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
   color: var(--iris);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .empty-diagnosis {
@@ -708,6 +726,134 @@ input:focus-visible {
   color: var(--ink-soft);
   font-size: 0.74rem;
   line-height: 1.55;
+}
+
+.diagnosis-loading {
+  max-width: 260px;
+  margin: auto;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.diagnosis-loading > span {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 15px;
+  border: 2px solid var(--line);
+  border-top-color: var(--iris);
+  border-radius: 50%;
+  animation: spin-flat 700ms linear infinite;
+}
+
+.diagnosis-loading strong {
+  font-size: 0.82rem;
+}
+
+.diagnosis-loading p {
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.diagnosis-result {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.diagnosis-summary {
+  padding: 13px 14px;
+  border-left: 3px solid var(--fault);
+  background: var(--fault-soft);
+}
+
+.diagnosis-summary span,
+.diagnosis-next span,
+.evidence-list h3,
+.diagnosis-facts dt {
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.diagnosis-summary h3 {
+  margin: 5px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.diagnosis-facts {
+  margin: 0;
+}
+
+.diagnosis-facts > div {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.diagnosis-facts dd {
+  margin: 5px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.evidence-list {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.evidence-list h3 {
+  margin: 0 0 9px;
+}
+
+.evidence-list [data-diagnosis-evidence] {
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-link {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  text-align: left;
+}
+
+.evidence-link:hover {
+  border-color: var(--iris);
+}
+
+.evidence-link span {
+  color: var(--iris);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+}
+
+.evidence-link p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.diagnosis-next {
+  padding: 13px 0 0;
+}
+
+.diagnosis-next p {
+  margin: 5px 0 0;
+  font-size: 0.69rem;
+  line-height: 1.5;
 }
 
 .fault-dock {
@@ -751,6 +897,21 @@ input:focus-visible {
   height: 16px;
   border-radius: 50%;
   background: var(--ink-soft);
+  transition: left 160ms ease, background 160ms ease;
+}
+
+.switch[aria-checked="true"] {
+  border-color: var(--fault);
+  background: var(--fault);
+}
+
+.switch[aria-checked="true"] span {
+  left: 21px;
+  background: var(--surface);
+}
+
+.fault-dock.is-armed {
+  box-shadow: inset 4px 0 var(--fault);
 }
 
 .timeline {
@@ -866,6 +1027,11 @@ input:focus-visible {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.timeline-event.is-error {
+  border-color: var(--fault);
+  color: #ffd7d0;
+}
+
 .timeline-event strong {
   font-size: 0.61rem;
   white-space: nowrap;
@@ -906,6 +1072,12 @@ input:focus-visible {
 @keyframes spin {
   to {
     transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+@keyframes spin-flat {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -1412,7 +1584,8 @@ input:focus-visible {
   }
 
   .map-wires path.is-active,
-  .button-dark.is-saving::before {
+  .button-dark.is-saving::before,
+  .diagnosis-loading > span {
     animation: none !important;
   }
 }

@@ -3,6 +3,8 @@ import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { investigateTrace } from "./lib/investigator.js";
+
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "public");
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
@@ -21,8 +23,51 @@ function resolvePublicPath(pathname) {
   return filePath.startsWith(root) ? filePath : null;
 }
 
-const server = createServer((request, response) => {
+function sendJson(response, statusCode, body) {
+  response.writeHead(statusCode, {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8"
+  });
+  response.end(JSON.stringify(body));
+}
+
+function readJson(request, maximumBytes = 64 * 1024) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (Buffer.byteLength(body) > maximumBytes) {
+        reject(new Error("Request body is too large."));
+        request.destroy();
+      }
+    });
+    request.on("end", () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        reject(new Error("Request body must be valid JSON."));
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+const server = createServer(async (request, response) => {
   const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
+
+  if (request.method === "POST" && url.pathname === "/api/investigate") {
+    try {
+      const body = await readJson(request);
+      const diagnosis = await investigateTrace(body.trace);
+      sendJson(response, 200, diagnosis);
+    } catch (error) {
+      sendJson(response, 400, { error: error.message });
+    }
+    return;
+  }
+
   const filePath = resolvePublicPath(url.pathname);
 
   if (!filePath || !existsSync(filePath) || !statSync(filePath).isFile()) {

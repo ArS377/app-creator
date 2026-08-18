@@ -187,10 +187,10 @@
             <p class="eyebrow">03 · Read the evidence</p>
             <h2 id="diagnosis-title">Investigator</h2>
           </div>
-          <span class="investigator-mark" aria-hidden="true">✦</span>
+          <span class="investigator-mode" data-investigator-mode>Ready</span>
         </header>
 
-        <div class="empty-diagnosis">
+        <div class="empty-diagnosis" data-diagnosis-empty>
           <svg viewBox="0 0 80 80" aria-hidden="true">
             <circle cx="40" cy="40" r="27" />
             <path d="M40 24v18l12 7" />
@@ -199,12 +199,46 @@
           <p>Save one finding. The investigator will explain what happened and link each claim to the trace.</p>
         </div>
 
+        <div class="diagnosis-loading" data-diagnosis-loading hidden>
+          <span></span>
+          <strong>Checking the trace</strong>
+          <p>Finding the first abnormal event and verifying its evidence links.</p>
+        </div>
+
+        <div class="diagnosis-result" data-diagnosis-result hidden>
+          <div class="diagnosis-summary">
+            <span>Finding</span>
+            <h3 data-diagnosis-summary></h3>
+          </div>
+
+          <dl class="diagnosis-facts">
+            <div>
+              <dt>Cause</dt>
+              <dd data-diagnosis-cause></dd>
+            </div>
+            <div>
+              <dt>Effect</dt>
+              <dd data-diagnosis-effect></dd>
+            </div>
+          </dl>
+
+          <section class="evidence-list" aria-labelledby="evidence-title">
+            <h3 id="evidence-title">Trace evidence</h3>
+            <div data-diagnosis-evidence></div>
+          </section>
+
+          <div class="diagnosis-next">
+            <span>Next check</span>
+            <p data-diagnosis-next></p>
+          </div>
+        </div>
+
         <div class="fault-dock">
           <div>
             <span class="fault-label">Fault Lab</span>
             <strong>Reject database write</strong>
           </div>
-          <button class="switch" type="button" role="switch" aria-checked="false" aria-label="Reject database write">
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-label="Reject database write" data-fault-switch>
             <span></span>
           </button>
         </div>

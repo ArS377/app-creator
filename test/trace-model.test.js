@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createSuccessfulTrace, formatMilliseconds } from "../public/js/trace-model.js";
+import {
+  createFaultedTrace,
+  createSuccessfulTrace,
+  formatMilliseconds
+} from "../public/js/trace-model.js";
 
 test("a successful trace follows the observed system path", () => {
   const trace = createSuccessfulTrace();
@@ -24,4 +28,14 @@ test("each trace owns a separate event collection", () => {
 
 test("milliseconds are shown as a compact measurement", () => {
   assert.equal(formatMilliseconds(38.4), "38 ms");
+});
+
+test("a faulted trace exposes its first error at the database boundary", () => {
+  const trace = createFaultedTrace();
+  const firstError = trace.events.find((event) => event.level === "error");
+
+  assert.equal(trace.status, "error");
+  assert.equal(trace.fault, "reject-database-write");
+  assert.equal(firstError.id, "fault-evt-04");
+  assert.equal(firstError.node, "database");
 });
