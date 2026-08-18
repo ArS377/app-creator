@@ -8,6 +8,9 @@ import express from "express";
 import { investigateTrace } from "../lib/investigator.js";
 import { createCryptoVault, EncryptedCredentialStore } from "./crypto-vault.js";
 import { createDocumentStore } from "./document-store.js";
+import { createProjectRouter } from "./project-routes.js";
+import { ProjectRepository } from "./project-repository.js";
+import { ProjectService } from "./project-service.js";
 import { ReplitMcpService } from "./replit-mcp.js";
 import { createReplitRouter } from "./replit-routes.js";
 import { createSessionStore, sessionCookieName } from "./session-store.js";
@@ -63,18 +66,22 @@ export async function createLivingBlueprintApp(options = {}) {
   );
   const credentials = options.credentials || new EncryptedCredentialStore(documentStore, vault);
   const replit = options.replit || new ReplitMcpService({ credentials });
+  const projectRepository = options.projectRepository || new ProjectRepository(documentStore);
+  const projects = options.projects || new ProjectService({ repository: projectRepository, replit });
   const healthStartedAt = Date.now();
 
   await documentStore.init();
   app.locals.documentStore = documentStore;
   app.locals.sessionStore = sessionStore;
   app.locals.replit = replit;
+  app.locals.projects = projects;
 
   app.disable("x-powered-by");
   app.use(securityHeaders);
   app.use(sessionMiddleware(sessionStore));
   app.use(express.json({ limit: "64kb", strict: true }));
   app.use(createReplitRouter(replit));
+  app.use(createProjectRouter(projects));
 
   app.get("/api/health", (_request, response) => {
     response.json({
