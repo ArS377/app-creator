@@ -6,23 +6,26 @@ This document records the boundary between Living Blueprint and the public Repli
 
 Living Blueprint connects to `https://replit-mcp.com/server/mcp` over Streamable HTTP. OAuth 2.1 with PKCE protects the connection. Tokens, client registration data, code verifiers, and state stay encrypted on the server.
 
-The current public tools support three operations:
+The current public tools support the full project loop:
 
-- `create_app_from_prompt` creates a new Replit app and returns its Repl ID and editor URL.
+- `create_app_from_prompt` creates a new Replit app and can start from a private copy of an instrumented source Repl.
+- `search_apps`, `list_apps`, and `resolve_app_by_name` find apps the user can edit.
 - `update_app_using_prompt` asks Agent to change that app.
 - `ask_question` inspects the app without changing it.
+- `publish_app` publishes the current app version.
+- `get_publish_status` returns the publication state and public URL.
 
 Creation and updates are asynchronous. An MCP timeout does not prove failure and must not trigger a duplicate request. Living Blueprint records the accepted operation, shows the editor URL, and lets the user run a fresh inspection when Agent finishes.
 
 ## What the integration cannot do
 
-The current public tools do not clone a source Repl, publish an app, report publication status, install a Replit Secret, or expose Agent's private reasoning. The interface does not imitate any of those abilities.
+The current public tools do not install a Replit Secret or expose Agent's private reasoning. The interface does not imitate either ability.
 
-Users finish and publish their app in Replit. Living Blueprint only shows states supported by a returned tool result, a validated manifest, or runtime evidence.
+Living Blueprint only shows states supported by a returned tool result, a validated manifest, publication status, or runtime evidence.
 
 ## Generated-app contract
 
-The creation prompt includes a compact instrumentation contract. It asks Agent to:
+When `SOURCE_REPL_ID` is configured, creation starts from the maintained instrumented source Repl. The creation prompt also includes a compact contract. It asks Agent to:
 
 1. use React, Express, Postgres, and WebSockets where the product needs them;
 2. install a small browser trace bridge with an explicit allowlist;
@@ -51,7 +54,8 @@ This token cannot call Replit, modify an app, read stored traces, or run an inve
 - `creating`: the create request is in flight.
 - `agent_working`: Replit returned a Repl ID or the call timed out after acceptance.
 - `inspecting`: Living Blueprint is asking for the manifest.
-- `needs_replit`: the user needs to finish or publish in Replit.
+- `publishing`: Replit is publishing the current app version.
+- `published`: Replit returned a public runtime URL.
 - `observable`: a valid manifest and runtime pairing are available.
 - `updating`: an update request is in flight.
 - `failed`: Replit returned a definite error.
@@ -63,7 +67,7 @@ There is no synthetic percentage meter. Each displayed milestone has an evidence
 Version 1 is complete when the repository includes:
 
 - an encrypted OAuth provider with state validation and reconnect support;
-- real MCP create, update, and inspection calls behind a testable client boundary;
+- real MCP create, update, inspection, publication, and status calls behind a testable client boundary;
 - persistent projects, versions, manifests, pairings, and sanitized traces;
 - strict manifest validation and deterministic snapshot diffs;
 - WebSocket trace ingest with quotas and live viewer updates;

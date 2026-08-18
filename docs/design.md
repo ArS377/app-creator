@@ -28,7 +28,7 @@ Runtime events separate Living Blueprint from an animated architecture diagram. 
 
 - The main product and generated apps use Replit. The main product is a published Replit App. Authenticated generation depends on a successful MCP OAuth spike.
 - Version 0 uses one prepared Replit research app, one traced action, and one database failure. It does not create apps for visitors.
-- Version 1 accepts product prompts within a supported capability envelope. Replit Agent creates each app from an instrumentation contract included in the prompt. The control plane verifies the result after creation and every update.
+- Version 1 accepts product prompts within a supported capability envelope. Apps start as private copies of an instrumented source Repl when `SOURCE_REPL_ID` is configured. The control plane verifies the contract after creation and every update.
 - Version 1 supports apps created through Living Blueprint. It does not analyze arbitrary repositories or every framework.
 - Runtime events must be observed, correlated, and sanitized. The product must not capture secrets, cookies, authorization headers, raw form values, database rows, or AI prompt contents.
 - Build-stage visuals must represent confirmed milestones and the resulting architecture. They must not imply access to Replit Agent's hidden reasoning.
@@ -39,9 +39,9 @@ Runtime events separate Living Blueprint from an animated architecture diagram. 
 
 ## Premises
 
-1. The public Replit MCP currently exposes `create_app_from_prompt`, `update_app_using_prompt`, and `ask_question`. Creation returns a Repl ID and editor URL. It does not accept a source Repl, publish an app, or report publication status.
+1. The public Replit MCP exposes creation, search, inspection, prompt-based updates, publishing, and publish-status checks. `create_app_from_prompt` accepts `sourceReplId` for a private source-app copy.
 2. Replit MCP does not document file-by-file build events or a tool for installing per-app secrets. Those are product limits, not implementation details.
-3. The generation prompt defines the supported stack and tracing contract. `ask_question` and runtime evidence verify whether Agent preserved that contract during creation and one update.
+3. The source Repl and generation prompt define the supported stack and tracing contract. `ask_question` and runtime evidence verify whether Agent preserved that contract during creation and one update.
 4. Agent can return an architecture description through `ask_question`, but that result is inferred. Schema validation proves its shape, not its truth. Runtime evidence must confirm nodes when possible.
 5. The generated app can send sanitized events to the control plane only after the project proves tenant-scoped credential provisioning outside Agent prompts and client code.
 6. The investigator is useful only when its cited events support its diagnosis. Citation existence alone is not enough.
@@ -112,7 +112,7 @@ Cons:
 
 ## Recommended approach
 
-Build Approach B in two releases. Version 0 proves live tracing and evidence-linked diagnosis with one prepared Replit app. Version 1 adds authenticated creation, prompt updates, manifest snapshots, and runtime pairing for generated apps. Approach A supplies an inferred post-build manifest. Approach C stays out of scope.
+Build Approach B in two releases. Version 0 proves live tracing and evidence-linked diagnosis with one prepared Replit app. Version 1 adds authenticated creation from an instrumented source, publishing, prompt updates, manifest snapshots, and runtime pairing. Approach A supplies an inferred post-build manifest. Approach C stays out of scope.
 
 ### Delivery gates
 
@@ -128,11 +128,11 @@ Version 0 ships first:
 User-generated apps remain blocked until these tests pass:
 
 1. The control plane completes MCP OAuth with PKCE and keeps Replit tokens encrypted on the server.
-2. Agent creates an app with the tracing bridge and keeps it after one `update_app_using_prompt` call.
+2. A source-Repl copy keeps the tracing bridge after creation and one `update_app_using_prompt` call.
 3. The one-time browser pairing flow rejects the wrong origin, expired codes, and reused codes.
 4. Manifest extraction returns strict schema version 1 JSON or a visible invalid state.
 5. The complete frame or synchronized top-level-window handshake passes in current Chrome, Safari, and Firefox.
-6. The interface sends the user to the returned Replit editor URL for build completion and publication. It never claims that Living Blueprint published the app.
+6. The publish tool returns a status that Living Blueprint can verify before presenting the runtime URL.
 
 Server-side trace relay remains unavailable until Replit exposes safe secret provisioning. Version 1 uses a short-lived, telemetry-only browser pairing token delivered after strict origin checks. It never places OAuth tokens, persistent credentials, or user data in Agent prompts.
 
@@ -156,7 +156,7 @@ flowchart LR
 The control plane has seven responsibilities:
 
 1. Authenticate the user with Replit through the MCP OAuth flow.
-2. Call `create_app_from_prompt` with the product brief and the supported instrumentation contract.
+2. Call `create_app_from_prompt` with the source Repl ID, product brief, and supported instrumentation contract.
 3. Issue short-lived, single-use runtime pairing codes without exposing Replit credentials.
 4. Obtain, label, and validate an inferred architecture manifest after creation or update.
 5. Receive sanitized runtime events and group them into traces.
@@ -230,7 +230,7 @@ All metadata uses an allowlist. Database events may include operation type, norm
 
 ### Published-app access policy
 
-Living Blueprint cannot publish through the current public MCP. The user opens the returned Replit editor URL and controls publication there. Before creation, the interface warns the user not to put credentials or private data in the prompt. It never claims that a Repl is private or that an editor URL is a published app.
+Living Blueprint publishes through `publish_app` and verifies the result through `get_publish_status`. Before creation, the interface warns the user not to put credentials or private data in the prompt. It does not treat an editor URL as a public runtime URL.
 
 ### Architecture manifest
 
@@ -548,13 +548,13 @@ The user can switch between before, after, and overlay views. Only the current v
 
 ### App lifecycle
 
-The control plane uses these states: `draft`, `creating`, `agent_working`, `inspecting`, `needs_replit`, `observable`, `updating`, `failed`.
+The control plane uses these states: `draft`, `creating`, `agent_working`, `inspecting`, `publishing`, `published`, `observable`, `updating`, `failed`.
 
 Before each create or update, the control plane creates an immutable version ID in `pending` state. The instrumentation contract includes that identifier. A failed update leaves the previous version record active and marks the pending record failed.
 
-`replUrl` opens the Replit project editor. The user may add a published app URL after deploying in Replit. The control plane marks the project `observable` only after a valid manifest exists and the exact runtime origin completes a pairing handshake.
+`replUrl` opens the Replit project editor. The public runtime URL comes from `get_publish_status`. The control plane marks the project `observable` only after a valid manifest exists and the exact runtime origin completes a pairing handshake.
 
-Replit MCP has no documented create-status or update-status tool. Creation and update therefore stop at `agent_working` after the tool returns a Repl ID. The user confirms that Agent finished, then Living Blueprint uses `ask_question` to request a manifest. A valid manifest and a successful runtime pairing are separate signals and stay separate in the interface.
+Replit MCP has no documented create-status or update-status tool. Creation and update therefore stop at `agent_working` after the tool returns a Repl ID. The user confirms that Agent finished, then Living Blueprint uses `ask_question` to request a manifest. Publication status, a valid manifest, and successful runtime pairing are separate signals and stay separate in the interface.
 
 Each operation has a visible last-known state and a manual inspection action. MCP timeout errors are recorded as unknown outcomes and are never retried automatically because a duplicate call could create a second app. Updates replace the current app. Living Blueprint stores old manifests and traces as snapshots rather than promising a second live URL.
 
