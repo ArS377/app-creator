@@ -27,6 +27,7 @@ function securityHeaders(_request, response, next) {
     "base-uri 'self'",
     "connect-src 'self' ws: wss:",
     "font-src 'self'",
+    "frame-src https: http://localhost:* http://127.0.0.1:*",
     "form-action 'self'",
     "frame-ancestors 'self' https://replit.com https://*.replit.com https://*.replit.dev https://*.replit.app",
     "img-src 'self' data: https:",
