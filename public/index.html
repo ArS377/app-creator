@@ -49,6 +49,29 @@
       </button>
     </section>
 
+    <ol class="journey-rail" aria-label="Demo loop">
+      <li class="is-current" data-journey-step="0">
+        <span>1</span>
+        <strong>Build replay</strong>
+      </li>
+      <li data-journey-step="1">
+        <span>2</span>
+        <strong>Try the app</strong>
+      </li>
+      <li data-journey-step="2">
+        <span>3</span>
+        <strong>Inject a fault</strong>
+      </li>
+      <li data-journey-step="3">
+        <span>4</span>
+        <strong>Inspect evidence</strong>
+      </li>
+      <li data-journey-step="4">
+        <span>5</span>
+        <strong>Update replay</strong>
+      </li>
+    </ol>
+
     <nav class="mobile-tabs" aria-label="Workspace panels">
       <button class="mobile-tab is-active" type="button" data-panel-target="app">App</button>
       <button class="mobile-tab" type="button" data-panel-target="map">Map</button>
@@ -198,6 +221,74 @@
         <span>Response</span>
       </div>
     </section>
+
+    <dialog class="tutorial" aria-labelledby="tutorial-title">
+      <div class="tutorial-layout">
+        <aside class="tutorial-map" aria-label="Tutorial progress">
+          <div class="tutorial-map-heading">
+            <span>Quick tour</span>
+            <strong><span data-tutorial-count>1</span> / 5</strong>
+          </div>
+          <ol>
+            <li class="is-current" data-tutorial-marker="0"><span>1</span> Build replay</li>
+            <li data-tutorial-marker="1"><span>2</span> Try the app</li>
+            <li data-tutorial-marker="2"><span>3</span> Inject a fault</li>
+            <li data-tutorial-marker="3"><span>4</span> Inspect evidence</li>
+            <li data-tutorial-marker="4"><span>5</span> Update replay</li>
+          </ol>
+        </aside>
+
+        <section class="tutorial-content">
+          <button class="tutorial-close" type="button" aria-label="Close tutorial" data-tutorial-close>×</button>
+
+          <div class="tutorial-visual" aria-hidden="true">
+            <svg viewBox="0 0 360 170">
+              <path class="tutorial-wire" d="M42 85H318" />
+              <g class="tutorial-visual-node is-current" data-tutorial-visual="0" transform="translate(42 85)">
+                <circle r="17" />
+                <path d="m-5-7 12 7-12 7Z" />
+              </g>
+              <g class="tutorial-visual-node" data-tutorial-visual="1" transform="translate(111 85)">
+                <circle r="17" />
+                <path d="M-7-6H7V6H-7Z" />
+              </g>
+              <g class="tutorial-visual-node" data-tutorial-visual="2" transform="translate(180 85)">
+                <circle r="17" />
+                <path d="M0-8V2M0 7v1" />
+              </g>
+              <g class="tutorial-visual-node" data-tutorial-visual="3" transform="translate(249 85)">
+                <circle r="17" />
+                <path d="m-7 1 5 5L8-7" />
+              </g>
+              <g class="tutorial-visual-node" data-tutorial-visual="4" transform="translate(318 85)">
+                <circle r="17" />
+                <path d="M-7 0H7M2-5l5 5-5 5" />
+              </g>
+            </svg>
+            <span class="tutorial-visual-caption" data-tutorial-caption>Recorded Replit build</span>
+          </div>
+
+          <p class="tutorial-kicker" data-tutorial-kicker>Step 1 · See what was built</p>
+          <h2 id="tutorial-title" data-tutorial-title>Start with the build replay</h2>
+          <p class="tutorial-description" data-tutorial-description>
+            Watch the prepared Replit app take shape. The replay shows confirmed milestones and the finished architecture, not hidden model reasoning.
+          </p>
+
+          <div class="tutorial-callout">
+            <span>Look for</span>
+            <p data-tutorial-callout>The browser, API route, database, and trace stream appearing on the map.</p>
+          </div>
+
+          <footer class="tutorial-actions">
+            <button class="text-button tutorial-skip" type="button" data-tutorial-close>Skip tour</button>
+            <div>
+              <button class="button button-quiet" type="button" data-tutorial-back disabled>Back</button>
+              <button class="button button-primary" type="button" data-tutorial-next>Next</button>
+            </div>
+          </footer>
+        </section>
+      </div>
+    </dialog>
 
     <div class="announcement" aria-live="polite" aria-atomic="true"></div>
     <script type="module" src="/app.js"></script>
