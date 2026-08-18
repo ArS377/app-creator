@@ -1661,6 +1661,10 @@ input:focus-visible {
   font-size: 0.55rem;
 }
 
+.architecture-diff[hidden] {
+  display: none;
+}
+
 .architecture-diff span {
   display: inline-flex;
   gap: 6px;
