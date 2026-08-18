@@ -6,6 +6,6 @@ run = "npm start"
 requiredFiles = [".replit", "package.json"]
 
 [deployment]
-build = "npm test"
+build = "npm run check"
 run = "npm start"
 deploymentTarget = "cloudrun"

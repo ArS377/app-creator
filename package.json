@@ -1,13 +1,29 @@
 {
   "name": "living-blueprint",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "A live, explorable blueprint for AI-generated Replit apps.",
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
-    "test": "node --test"
+    "dev": "vite --host 0.0.0.0",
+    "dev:server": "node --watch server.js",
+    "build": "vite build",
+    "test": "node --test",
+    "check": "npm test && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "express": "5.2.1",
+    "pg": "8.22.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "ws": "8.21.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "vite": "8.2.1"
   },
   "engines": {
     "node": ">=20"
