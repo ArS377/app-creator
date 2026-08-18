@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import express from "express";
 
 import { investigateTrace } from "../lib/investigator.js";
+import { loadRuntimeConfig } from "./config.js";
 import { createCryptoVault, EncryptedCredentialStore } from "./crypto-vault.js";
 import { createDocumentStore } from "./document-store.js";
 import { createProjectRouter } from "./project-routes.js";
@@ -67,18 +68,25 @@ function sessionMiddleware(sessionStore) {
 
 export async function createLivingBlueprintApp(options = {}) {
   const app = express();
-  const documentStore = options.documentStore || createDocumentStore();
+  const config = options.config || loadRuntimeConfig();
+  const documentStore = options.documentStore || createDocumentStore({
+    connectionString: config.databaseUrl || undefined
+  });
   const sessionStore = options.sessionStore || createPersistentSessionStore(documentStore);
   const investigator = options.investigator || investigateTrace;
   const vault = options.vault || createCryptoVault(
-    process.env.SESSION_SECRET || "living-blueprint-local-development"
+    config.sessionSecret
   );
   const credentials = options.credentials || new EncryptedCredentialStore(documentStore, vault);
   const replit = options.replit || new ReplitMcpService({ credentials });
   const projectRepository = options.projectRepository || new ProjectRepository(documentStore);
-  const projects = options.projects || new ProjectService({ repository: projectRepository, replit });
+  const projects = options.projects || new ProjectService({
+    repository: projectRepository,
+    replit,
+    sourceReplId: config.sourceReplId
+  });
   const tokenService = options.tokenService || createSignedTokenService(
-    process.env.SESSION_SECRET || "living-blueprint-local-development"
+    config.sessionSecret
   );
   const pairings = options.pairings || new PairingService({
     documentStore,
@@ -95,6 +103,7 @@ export async function createLivingBlueprintApp(options = {}) {
   app.locals.projects = projects;
   app.locals.pairings = pairings;
   app.locals.traces = traces;
+  app.locals.config = config;
 
   app.disable("x-powered-by");
   app.use(securityHeaders);
@@ -117,7 +126,7 @@ export async function createLivingBlueprintApp(options = {}) {
       status: "ok",
       service: "living-blueprint",
       version: "1.0.0",
-      persistence: process.env.DATABASE_URL ? "postgres" : "memory",
+      persistence: config.databaseUrl ? "postgres" : "memory",
       investigator: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL ? "ai-ready" : "local-fallback",
       uptimeSeconds: Math.floor((Date.now() - healthStartedAt) / 1000)
     });

@@ -34,3 +34,35 @@ test("trace sanitization drops unapproved fields", () => {
   assert.equal("authorization" in sanitized.events[0], false);
   assert.equal("rawFormValue" in sanitized.events[0], false);
 });
+
+test("an unrelated runtime error is not called the sample database fault", () => {
+  const diagnosis = buildFallbackDiagnosis({
+    id: "runtime-error",
+    status: "error",
+    duration: 42,
+    events: [
+      {
+        id: "before",
+        at: 0,
+        node: "component:Checkout",
+        kind: "ui.action",
+        level: "info",
+        title: "Checkout clicked",
+        detail: "The action began."
+      },
+      {
+        id: "failed",
+        at: 42,
+        node: "route:POST:/checkout",
+        kind: "error",
+        level: "error",
+        title: "Payment provider unavailable",
+        detail: "A safe error class was recorded."
+      }
+    ]
+  });
+
+  assert.match(diagnosis.summary, /route:POST:\/checkout/);
+  assert.equal(diagnosis.summary.includes("database fault"), false);
+  assert.deepEqual(diagnosis.evidence.map((item) => item.eventId), ["failed", "before"]);
+});
