@@ -1,0 +1,11 @@
+entrypoint = "server.js"
+modules = ["nodejs-20"]
+run = "npm start"
+
+[gitHubImport]
+requiredFiles = [".replit", "package.json"]
+
+[deployment]
+build = "npm test"
+run = "npm start"
+deploymentTarget = "cloudrun"
