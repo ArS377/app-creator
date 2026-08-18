@@ -91,19 +91,19 @@
         <div class="app-canvas">
           <div class="sample-app-bar">
             <span class="sample-app-title">Fieldnotes</span>
-            <span>3 findings</span>
+            <span data-finding-count>3 findings</span>
           </div>
 
           <form class="finding-form" aria-label="Save a research finding">
             <label>
               What did you find?
-              <input type="text" value="Small teams ship faster with visible system boundaries" />
+              <input type="text" value="Small teams ship faster with visible system boundaries" required />
             </label>
             <label>
               Source
-              <input type="url" value="https://example.com/research" />
+              <input type="url" value="https://example.com/research" required />
             </label>
-            <button class="button button-dark" type="submit" disabled>Save finding</button>
+            <button class="button button-dark" type="submit">Save finding</button>
           </form>
 
           <div class="finding-list" aria-label="Saved findings">
@@ -138,31 +138,40 @@
 
         <div class="map-stage" aria-label="Application system map">
           <svg class="map-wires" viewBox="0 0 600 430" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M112 110C190 110 190 215 275 215" />
-            <path d="M325 215C410 215 410 110 488 110" />
-            <path d="M325 215C410 215 410 330 488 330" />
+            <path data-edge="browser-api" d="M112 110C190 110 190 215 275 215" />
+            <path data-edge="api-database" d="M325 215C410 215 410 110 488 110" />
+            <path data-edge="api-stream" d="M325 215C410 215 410 330 488 330" />
           </svg>
 
-          <button class="system-node node-browser" type="button">
+          <button class="system-node node-browser" type="button" data-node="browser">
             <span class="node-kicker">Client</span>
             <strong>Browser</strong>
             <span>Save form</span>
           </button>
-          <button class="system-node node-api" type="button">
+          <button class="system-node node-api" type="button" data-node="api">
             <span class="node-kicker">Server</span>
             <strong>API route</strong>
             <span>POST /findings</span>
           </button>
-          <button class="system-node node-database" type="button">
+          <button class="system-node node-database" type="button" data-node="database">
             <span class="node-kicker">Storage</span>
             <strong>Database</strong>
             <span>insert finding</span>
           </button>
-          <button class="system-node node-stream" type="button">
+          <button class="system-node node-stream" type="button" data-node="stream">
             <span class="node-kicker">Telemetry</span>
             <strong>Trace stream</strong>
             <span>session events</span>
           </button>
+        </div>
+
+        <div class="event-readout" aria-live="polite">
+          <span class="event-sequence" data-event-sequence>Ready</span>
+          <div>
+            <strong data-event-title>Save a finding to create a trace</strong>
+            <p data-event-detail>The path will show which boundary handled each part of the action.</p>
+          </div>
+          <time data-event-time>0 ms</time>
         </div>
 
         <div class="map-legend" aria-label="System map legend">
@@ -210,15 +219,21 @@
         </div>
         <output>0 ms</output>
       </div>
-      <div class="timeline-track" aria-hidden="true">
+      <div class="timeline-track">
         <span class="timeline-progress"></span>
         <span class="timeline-handle"></span>
+        <input
+          class="timeline-input"
+          type="range"
+          min="0"
+          max="0"
+          value="0"
+          aria-label="Trace position"
+          disabled
+        />
       </div>
-      <div class="timeline-scale" aria-hidden="true">
-        <span>Browser</span>
-        <span>API</span>
-        <span>Database</span>
-        <span>Response</span>
+      <div class="timeline-events" aria-label="Trace events">
+        <span class="timeline-empty">Save a finding to record the first trace.</span>
       </div>
     </section>
 

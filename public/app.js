@@ -1,6 +1,18 @@
+import { createSuccessfulTrace, formatMilliseconds } from "./js/trace-model.js";
+
 const panelTabs = document.querySelectorAll("[data-panel-target]");
 const panels = document.querySelectorAll("[data-panel]");
 const announcement = document.querySelector(".announcement");
+const findingForm = document.querySelector(".finding-form");
+const saveButton = findingForm.querySelector('button[type="submit"]');
+const findingList = document.querySelector(".finding-list");
+const findingCount = document.querySelector("[data-finding-count]");
+const timelineInput = document.querySelector(".timeline-input");
+const timelineProgress = document.querySelector(".timeline-progress");
+const timelineHandle = document.querySelector(".timeline-handle");
+const timelineEvents = document.querySelector(".timeline-events");
+const timelineTitle = document.querySelector("#timeline-title");
+const timelineOutput = document.querySelector(".timeline-heading output");
 const tutorial = document.querySelector(".tutorial");
 const tutorialContent = [
   {
@@ -46,6 +58,10 @@ const tutorialContent = [
 ];
 let tutorialStep = 0;
 let announcementTimer;
+let tracePlaybackTimer;
+let activeTrace = null;
+let activeEventIndex = -1;
+let savedFindingCount = 3;
 
 function announce(message) {
   window.clearTimeout(announcementTimer);
@@ -55,6 +71,149 @@ function announce(message) {
     announcement.classList.remove("is-visible");
   }, 2400);
 }
+
+function setJourneyStep(index) {
+  document.querySelectorAll("[data-journey-step]").forEach((step, stepIndex) => {
+    step.classList.toggle("is-current", stepIndex === index);
+  });
+}
+
+function renderTimelineEvents(trace) {
+  timelineEvents.replaceChildren(
+    ...trace.events.map((event, index) => {
+      const button = document.createElement("button");
+      const title = document.createElement("strong");
+      const time = document.createElement("span");
+
+      button.className = "timeline-event";
+      button.type = "button";
+      button.dataset.eventIndex = String(index);
+      button.setAttribute("aria-label", `${event.title}, ${formatMilliseconds(event.at)}`);
+      title.textContent = event.title;
+      time.textContent = formatMilliseconds(event.at);
+      button.append(title, time);
+      button.addEventListener("click", () => {
+        window.clearTimeout(tracePlaybackTimer);
+        renderTraceEvent(index);
+      });
+      return button;
+    })
+  );
+}
+
+function renderTraceEvent(index) {
+  if (!activeTrace) return;
+
+  activeEventIndex = Math.max(0, Math.min(index, activeTrace.events.length - 1));
+  const event = activeTrace.events[activeEventIndex];
+  const progress = activeTrace.duration ? (event.at / activeTrace.duration) * 100 : 0;
+
+  document.querySelector("[data-event-sequence]").textContent =
+    `${String(activeEventIndex + 1).padStart(2, "0")} / ${String(activeTrace.events.length).padStart(2, "0")}`;
+  document.querySelector("[data-event-title]").textContent = event.title;
+  document.querySelector("[data-event-detail]").textContent = event.detail;
+  document.querySelector("[data-event-time]").textContent = formatMilliseconds(event.at);
+  timelineTitle.textContent = event.title;
+  timelineOutput.value = formatMilliseconds(event.at);
+  timelineInput.value = String(activeEventIndex);
+  timelineProgress.style.width = `${progress}%`;
+  timelineHandle.style.left = `calc(${progress}% - 6px)`;
+
+  document.querySelectorAll("[data-node]").forEach((node) => {
+    const observed = activeTrace.events
+      .slice(0, activeEventIndex + 1)
+      .some((candidate) => candidate.node === node.dataset.node);
+    node.classList.toggle("is-observed", observed);
+    node.classList.toggle("is-active", node.dataset.node === event.node);
+  });
+
+  document.querySelectorAll("[data-edge]").forEach((edge) => {
+    const observed = activeTrace.events
+      .slice(0, activeEventIndex + 1)
+      .some((candidate) => candidate.edge === edge.dataset.edge);
+    edge.classList.toggle("is-observed", observed);
+    edge.classList.toggle("is-active", edge.dataset.edge === event.edge);
+  });
+
+  timelineEvents.querySelectorAll(".timeline-event").forEach((button, buttonIndex) => {
+    button.classList.toggle("is-observed", buttonIndex <= activeEventIndex);
+    button.classList.toggle("is-active", buttonIndex === activeEventIndex);
+    if (buttonIndex === activeEventIndex) {
+      button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  });
+}
+
+function finishSuccessfulSave() {
+  const findingText = findingForm.querySelector('input[type="text"]').value.trim();
+  const article = document.createElement("article");
+  const number = document.createElement("span");
+  const copy = document.createElement("p");
+
+  savedFindingCount += 1;
+  number.className = "finding-number";
+  number.textContent = String(savedFindingCount).padStart(2, "0");
+  copy.textContent = findingText;
+  article.append(number, copy);
+  findingList.prepend(article);
+  findingCount.textContent = `${savedFindingCount} findings`;
+  saveButton.disabled = false;
+  saveButton.classList.remove("is-saving");
+  saveButton.textContent = "Save finding";
+  announce("Finding saved. Scrub the trace to inspect each boundary.");
+}
+
+function playTrace(trace) {
+  window.clearTimeout(tracePlaybackTimer);
+  activeTrace = trace;
+  activeEventIndex = -1;
+  timelineInput.disabled = false;
+  timelineInput.max = String(trace.events.length - 1);
+  renderTimelineEvents(trace);
+
+  function advance() {
+    const nextIndex = activeEventIndex + 1;
+    renderTraceEvent(nextIndex);
+
+    if (nextIndex < trace.events.length - 1) {
+      const currentTime = trace.events[nextIndex].at;
+      const nextTime = trace.events[nextIndex + 1].at;
+      tracePlaybackTimer = window.setTimeout(advance, Math.max(180, (nextTime - currentTime) * 5));
+    } else {
+      finishSuccessfulSave();
+    }
+  }
+
+  advance();
+}
+
+findingForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!findingForm.reportValidity() || saveButton.disabled) return;
+
+  setJourneyStep(1);
+  saveButton.disabled = true;
+  saveButton.classList.add("is-saving");
+  saveButton.textContent = "Saving";
+  playTrace(createSuccessfulTrace());
+});
+
+timelineInput.addEventListener("input", () => {
+  window.clearTimeout(tracePlaybackTimer);
+  renderTraceEvent(Number.parseInt(timelineInput.value, 10));
+});
+
+document.querySelectorAll("[data-node]").forEach((node) => {
+  node.addEventListener("click", () => {
+    if (!activeTrace) {
+      announce("Save a finding first, then use the map to inspect its trace.");
+      return;
+    }
+
+    const matchingIndex = activeTrace.events.findIndex((event) => event.node === node.dataset.node);
+    if (matchingIndex >= 0) renderTraceEvent(matchingIndex);
+  });
+});
 
 panelTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
