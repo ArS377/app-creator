@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-family: "Inter Variable", Inter, "Segoe UI", sans-serif;
   font-synthesis: none;
   --paper: #f8f4ee;
   --paper-deep: #eee7dc;
@@ -20,7 +20,7 @@
   --yellow-pale: #f6e8bb;
   --fault: #c8463c;
   --fault-pale: #f1d1cd;
-  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --mono: "Inter Variable", Inter, "Segoe UI", sans-serif;
 }
 
 * {
@@ -38,6 +38,15 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background: var(--paper);
+}
+
+h1,
+h2,
+h3,
+h4,
+strong,
+b {
+  font-weight: 620;
 }
 
 button,
@@ -2453,4 +2462,15 @@ svg {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.brand,
+.primary-nav button.is-active,
+.button,
+.help-button,
+.text-action,
+.workspace-tabs button,
+.investigator-result > header button,
+.preview-shell > header button {
+  font-weight: 600;
 }
