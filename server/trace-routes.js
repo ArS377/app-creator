@@ -13,8 +13,11 @@ function asyncRoute(handler) {
   return (request, response, next) => Promise.resolve(handler(request, response)).catch(next);
 }
 
-function websocketUrl(request) {
-  const origin = process.env.PUBLIC_ORIGIN || `${request.protocol}://${request.get("host")}`;
+function websocketUrl(request, configuredOrigin) {
+  const forwardedProtocol = String(request.headers["x-forwarded-proto"] || request.protocol)
+    .split(",")[0]
+    .trim();
+  const origin = configuredOrigin || `${forwardedProtocol}://${request.get("host")}`;
   const url = new URL(origin);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   url.pathname = "/ws/traces";
@@ -42,7 +45,7 @@ export function createTraceRouter(options) {
     response.status(201).json({
       pairing,
       messageType: "lb.pair",
-      bridgeUrl: `${process.env.PUBLIC_ORIGIN || `${request.protocol}://${request.get("host")}`}/bridge/v1.js`
+      bridgeUrl: `${options.publicOrigin || `${String(request.headers["x-forwarded-proto"] || request.protocol).split(",")[0].trim()}://${request.get("host")}`}/bridge/v1.js`
     });
   }));
 
@@ -63,7 +66,7 @@ export function createTraceRouter(options) {
     allowRuntimeCors(request, response);
     const input = exchangeSchema.parse(request.body);
     const result = await options.pairings.exchange(input.code, String(request.headers.origin || ""));
-    response.json({ ...result, websocketUrl: websocketUrl(request) });
+    response.json({ ...result, websocketUrl: websocketUrl(request, options.publicOrigin) });
   }));
 
   router.get("/api/projects/:projectId/traces", asyncRoute(async (request, response) => {

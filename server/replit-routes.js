@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-function publicOrigin(request) {
-  if (process.env.PUBLIC_ORIGIN) return process.env.PUBLIC_ORIGIN.replace(/\/$/, "");
+function publicOrigin(request, configuredOrigin) {
+  if (configuredOrigin) return configuredOrigin.replace(/\/$/, "");
   const protocol = String(request.headers["x-forwarded-proto"] || request.protocol).split(",")[0].trim();
   return `${protocol}://${request.get("host")}`;
 }
@@ -19,7 +19,7 @@ export function createReplitRouter(replit, options = {}) {
 
   router.get("/auth/replit/start", async (request, response, next) => {
     try {
-      const redirectUrl = `${publicOrigin(request)}/auth/replit/callback`;
+      const redirectUrl = `${publicOrigin(request, options.publicOrigin)}/auth/replit/callback`;
       const result = await replit.beginAuthorization(request.livingBlueprintSession.id, redirectUrl);
       response.redirect(result.connected ? "/?replit=connected" : result.authorizationUrl);
     } catch (error) {
@@ -34,7 +34,7 @@ export function createReplitRouter(replit, options = {}) {
     }
 
     try {
-      const redirectUrl = `${publicOrigin(request)}/auth/replit/callback`;
+      const redirectUrl = `${publicOrigin(request, options.publicOrigin)}/auth/replit/callback`;
       await replit.finishAuthorization(request.livingBlueprintSession.id, redirectUrl, {
         code: String(request.query.code || ""),
         state: String(request.query.state || "")

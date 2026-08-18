@@ -110,10 +110,16 @@ export async function createLivingBlueprintApp(options = {}) {
   app.use(sessionMiddleware(sessionStore));
   app.use(express.json({ limit: "64kb", strict: true }));
   app.use(createReplitRouter(replit, {
+    publicOrigin: config.publicOrigin,
     onDisconnect: (sessionId) => pairings.revokeSession(sessionId)
   }));
-  app.use(createProjectRouter(projects, { pairings }));
-  app.use(createTraceRouter({ pairings, traces, repository: projectRepository }));
+  app.use(createProjectRouter(projects, { pairings, publicOrigin: config.publicOrigin }));
+  app.use(createTraceRouter({
+    pairings,
+    traces,
+    repository: projectRepository,
+    publicOrigin: config.publicOrigin
+  }));
 
   app.use("/bridge", (_request, response, next) => {
     response.setHeader("access-control-allow-origin", "*");

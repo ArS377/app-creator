@@ -12,14 +12,14 @@ const updateSchema = z.object({
   changeDescription: z.string().trim().min(10).max(3000)
 }).strict();
 
-function publicOrigin(request) {
-  if (process.env.PUBLIC_ORIGIN) return process.env.PUBLIC_ORIGIN.replace(/\/$/, "");
+function publicOrigin(request, configuredOrigin) {
+  if (configuredOrigin) return configuredOrigin.replace(/\/$/, "");
   const protocol = String(request.headers["x-forwarded-proto"] || request.protocol).split(",")[0].trim();
   return `${protocol}://${request.get("host")}`;
 }
 
-function redirectUrl(request) {
-  return `${publicOrigin(request)}/auth/replit/callback`;
+function redirectUrl(request, configuredOrigin) {
+  return `${publicOrigin(request, configuredOrigin)}/auth/replit/callback`;
 }
 
 function asyncRoute(handler) {
@@ -46,7 +46,7 @@ export function createProjectRouter(projects, options = {}) {
     const input = createSchema.parse(request.body);
     const project = await projects.create(
       request.livingBlueprintSession.id,
-      redirectUrl(request),
+      redirectUrl(request, options.publicOrigin),
       input
     );
     response.status(201).json({ project });
@@ -56,7 +56,7 @@ export function createProjectRouter(projects, options = {}) {
     const input = updateSchema.parse(request.body);
     const project = await projects.update(
       request.livingBlueprintSession.id,
-      redirectUrl(request),
+      redirectUrl(request, options.publicOrigin),
       request.params.projectId,
       input.changeDescription
     );
@@ -66,7 +66,7 @@ export function createProjectRouter(projects, options = {}) {
   router.post("/api/projects/:projectId/inspect", asyncRoute(async (request, response) => {
     const project = await projects.inspect(
       request.livingBlueprintSession.id,
-      redirectUrl(request),
+      redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
     response.json({ project });
@@ -75,7 +75,7 @@ export function createProjectRouter(projects, options = {}) {
   router.post("/api/projects/:projectId/publish", asyncRoute(async (request, response) => {
     const project = await projects.publish(
       request.livingBlueprintSession.id,
-      redirectUrl(request),
+      redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
     response.json({ project });
@@ -84,7 +84,7 @@ export function createProjectRouter(projects, options = {}) {
   router.post("/api/projects/:projectId/publish-status", asyncRoute(async (request, response) => {
     const project = await projects.refreshPublication(
       request.livingBlueprintSession.id,
-      redirectUrl(request),
+      redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
     response.json({ project });
@@ -107,7 +107,7 @@ export function createProjectRouter(projects, options = {}) {
   router.get("/api/replit/apps", asyncRoute(async (request, response) => {
     response.json({ apps: await projects.listReplitApps(
       request.livingBlueprintSession.id,
-      redirectUrl(request)
+      redirectUrl(request, options.publicOrigin)
     ) });
   }));
 
