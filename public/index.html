@@ -339,6 +339,77 @@
       </div>
     </dialog>
 
+    <dialog class="replay" aria-labelledby="replay-title">
+      <header class="replay-header">
+        <div>
+          <span class="replay-label" data-replay-label>Recorded replay</span>
+          <h2 id="replay-title" data-replay-title></h2>
+          <p data-replay-description></p>
+        </div>
+        <button class="tutorial-close" type="button" aria-label="Close replay" data-replay-close>×</button>
+      </header>
+
+      <div class="replay-body">
+        <aside class="replay-steps">
+          <div class="replay-prompt">
+            <span>Prompt</span>
+            <p data-replay-prompt></p>
+          </div>
+          <ol data-replay-steps></ol>
+        </aside>
+
+        <section class="replay-stage" aria-label="Architecture replay">
+          <div class="replay-blueprint">
+            <svg viewBox="0 0 600 330" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M125 95C205 95 210 165 280 165" />
+              <path d="M330 165C405 165 405 95 480 95" />
+              <path d="M330 165C405 165 405 255 480 255" />
+              <path class="replay-added-wire" d="M125 255C185 255 210 185 280 170" />
+            </svg>
+
+            <div class="replay-node replay-browser" data-replay-node="browser">
+              <span>Client</span><strong>Browser</strong>
+            </div>
+            <div class="replay-node replay-api" data-replay-node="api">
+              <span>Server</span><strong>API route</strong>
+            </div>
+            <div class="replay-node replay-database" data-replay-node="database">
+              <span>Storage</span><strong>Database</strong>
+            </div>
+            <div class="replay-node replay-stream" data-replay-node="stream">
+              <span>Telemetry</span><strong>Trace stream</strong>
+            </div>
+            <div class="replay-node replay-filter" data-replay-node="filter">
+              <span>Added</span><strong>Tag filter</strong>
+            </div>
+            <div class="replay-node replay-tags" data-replay-node="tags">
+              <span>Added field</span><strong>tags[]</strong>
+            </div>
+          </div>
+
+          <div class="replay-readout">
+            <span data-replay-count>1 / 5</span>
+            <div>
+              <strong data-replay-step-title></strong>
+              <p data-replay-step-detail></p>
+            </div>
+          </div>
+
+          <div class="architecture-diff" data-architecture-diff hidden>
+            <span><i class="diff-added"></i> 2 added</span>
+            <span><i class="diff-changed"></i> 2 changed</span>
+            <span><i class="diff-same"></i> 4 unchanged</span>
+          </div>
+        </section>
+      </div>
+
+      <footer class="replay-controls">
+        <div class="replay-progress" aria-hidden="true"><span></span></div>
+        <button class="button button-quiet" type="button" data-replay-restart>Restart</button>
+        <button class="button button-primary" type="button" data-replay-toggle>Pause</button>
+      </footer>
+    </dialog>
+
     <div class="announcement" aria-live="polite" aria-atomic="true"></div>
     <script type="module" src="/app.js"></script>
   </body>

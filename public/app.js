@@ -1,4 +1,5 @@
 import { createFaultedTrace, createSuccessfulTrace, formatMilliseconds } from "./js/trace-model.js";
+import { getReplay } from "./js/replay-model.js";
 
 const panelTabs = document.querySelectorAll("[data-panel-target]");
 const panels = document.querySelectorAll("[data-panel]");
@@ -19,6 +20,7 @@ const diagnosisEmpty = document.querySelector("[data-diagnosis-empty]");
 const diagnosisLoading = document.querySelector("[data-diagnosis-loading]");
 const diagnosisResult = document.querySelector("[data-diagnosis-result]");
 const investigatorMode = document.querySelector("[data-investigator-mode]");
+const replayDialog = document.querySelector(".replay");
 const tutorial = document.querySelector(".tutorial");
 const tutorialContent = [
   {
@@ -69,6 +71,10 @@ let activeTrace = null;
 let activeEventIndex = -1;
 let savedFindingCount = 3;
 let faultArmed = false;
+let replayType = "build";
+let replayStep = 0;
+let replayPlaying = false;
+let replayTimer;
 
 function announce(message) {
   window.clearTimeout(announcementTimer);
@@ -386,9 +392,127 @@ tutorial.addEventListener("cancel", () => {
 });
 
 document.querySelectorAll('[data-action="replay-build"], [data-action="replay-update"]').forEach((button) => {
-  button.addEventListener("click", () => {
-    announce("Replay controls arrive in the final demo slice.");
+  button.addEventListener("click", () => openReplay(button.dataset.action === "replay-build" ? "build" : "update"));
+});
+
+function renderReplayStep() {
+  const replay = getReplay(replayType);
+  const step = replay.steps[replayStep];
+  const revealed = new Set(step.reveals);
+  const added = new Set(step.added || []);
+  const progress = ((replayStep + 1) / replay.steps.length) * 100;
+
+  replayDialog.querySelector("[data-replay-count]").textContent =
+    `${replayStep + 1} / ${replay.steps.length}`;
+  replayDialog.querySelector("[data-replay-step-title]").textContent = step.title;
+  replayDialog.querySelector("[data-replay-step-detail]").textContent = step.detail;
+  replayDialog.querySelector(".replay-progress span").style.width = `${progress}%`;
+
+  replayDialog.querySelectorAll("[data-replay-node]").forEach((node) => {
+    node.classList.toggle("is-revealed", revealed.has(node.dataset.replayNode));
+    node.classList.toggle("is-added", added.has(node.dataset.replayNode));
   });
+
+  replayDialog.querySelectorAll("[data-replay-step]").forEach((item, index) => {
+    item.classList.toggle("is-active", index === replayStep);
+    item.classList.toggle("is-complete", index < replayStep);
+  });
+
+  if (replayStep === replay.steps.length - 1) {
+    replayPlaying = false;
+    replayDialog.querySelector("[data-replay-toggle]").textContent = "Return to sample";
+  }
+}
+
+function scheduleReplayStep() {
+  window.clearTimeout(replayTimer);
+  if (!replayPlaying) return;
+
+  const replay = getReplay(replayType);
+  if (replayStep >= replay.steps.length - 1) {
+    replayPlaying = false;
+    renderReplayStep();
+    return;
+  }
+
+  replayTimer = window.setTimeout(() => {
+    replayStep += 1;
+    renderReplayStep();
+    scheduleReplayStep();
+  }, 1100);
+}
+
+function startReplay() {
+  replayPlaying = true;
+  replayDialog.querySelector("[data-replay-toggle]").textContent = "Pause";
+  scheduleReplayStep();
+}
+
+function openReplay(type) {
+  const replay = getReplay(type);
+  replayType = type;
+  replayStep = 0;
+  replayDialog.classList.toggle("is-update", type === "update");
+  replayDialog.querySelector("[data-replay-label]").textContent = replay.label;
+  replayDialog.querySelector("[data-replay-title]").textContent = replay.title;
+  replayDialog.querySelector("[data-replay-description]").textContent = replay.description;
+  replayDialog.querySelector("[data-replay-prompt]").textContent = replay.prompt;
+  replayDialog.querySelector("[data-architecture-diff]").hidden = type !== "update";
+
+  const stepList = replayDialog.querySelector("[data-replay-steps]");
+  stepList.replaceChildren(
+    ...replay.steps.map((step, index) => {
+      const item = document.createElement("li");
+      const number = document.createElement("span");
+      const copy = document.createElement("div");
+      const title = document.createElement("strong");
+      const detail = document.createElement("small");
+
+      item.dataset.replayStep = String(index);
+      number.textContent = String(index + 1);
+      title.textContent = step.title;
+      detail.textContent = step.detail;
+      copy.append(title, detail);
+      item.append(number, copy);
+      return item;
+    })
+  );
+
+  setJourneyStep(type === "build" ? 0 : 4);
+  renderReplayStep();
+  replayDialog.showModal();
+  startReplay();
+}
+
+function closeReplay() {
+  window.clearTimeout(replayTimer);
+  replayPlaying = false;
+  replayDialog.close();
+}
+
+replayDialog.querySelector("[data-replay-close]").addEventListener("click", closeReplay);
+replayDialog.addEventListener("cancel", () => {
+  window.clearTimeout(replayTimer);
+  replayPlaying = false;
+});
+
+replayDialog.querySelector("[data-replay-restart]").addEventListener("click", () => {
+  replayStep = 0;
+  renderReplayStep();
+  startReplay();
+});
+
+replayDialog.querySelector("[data-replay-toggle]").addEventListener("click", () => {
+  const replay = getReplay(replayType);
+  if (replayStep === replay.steps.length - 1) {
+    closeReplay();
+    return;
+  }
+
+  replayPlaying = !replayPlaying;
+  replayDialog.querySelector("[data-replay-toggle]").textContent = replayPlaying ? "Pause" : "Continue";
+  if (replayPlaying) scheduleReplayStep();
+  else window.clearTimeout(replayTimer);
 });
 
 if (sessionStorage.getItem("living-blueprint-tour") !== "seen") {
