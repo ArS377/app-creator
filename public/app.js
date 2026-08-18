@@ -1,5 +1,9 @@
-import { createFaultedTrace, createSuccessfulTrace, formatMilliseconds } from "./js/trace-model.js";
-import { getReplay } from "./js/replay-model.js";
+import {
+  createFaultedTrace,
+  createSuccessfulTrace,
+  formatMilliseconds
+} from "./js/trace-model.js?v=0.1.0";
+import { getReplay } from "./js/replay-model.js?v=0.1.0";
 
 const panelTabs = document.querySelectorAll("[data-panel-target]");
 const panels = document.querySelectorAll("[data-panel]");
