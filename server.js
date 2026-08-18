@@ -237,7 +237,7 @@ export function createLivingBlueprintServer(options = {}) {
     }
 
     response.writeHead(200, {
-      "cache-control": extname(filePath) === ".html" ? "no-store" : "public, max-age=300",
+      "cache-control": "no-store",
       "content-type": contentTypes[extname(filePath)] || "application/octet-stream"
     });
     if (request.method === "HEAD") response.end();
