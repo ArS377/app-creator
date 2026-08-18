@@ -5,6 +5,7 @@
   "description": "A live, explorable blueprint for AI-generated Replit apps.",
   "type": "module",
   "scripts": {
+    "prestart": "npm run build",
     "start": "node server.js",
     "dev": "vite --host 0.0.0.0",
     "dev:server": "node --watch server.js",
