@@ -53,6 +53,7 @@ export function App() {
   const [pairing, setPairing] = useState(null);
   const [diagnosis, setDiagnosis] = useState(null);
   const [diagnosisBusy, setDiagnosisBusy] = useState(false);
+  const [connectionMenu, setConnectionMenu] = useState(false);
 
   const selectedProjectId = screen !== "sample" && screen !== "create" ? screen : null;
 
@@ -166,6 +167,14 @@ export function App() {
     window.location.assign("/auth/replit/start");
   }
 
+  async function disconnect() {
+    await runAction("disconnect", async () => {
+      await api.post("/api/replit/disconnect");
+      setConnection({ connected: false, connectedAt: null, loading: false });
+      setConnectionMenu(false);
+    }, "Replit disconnected and runtime pairings revoked.");
+  }
+
   async function create(input) {
     await runAction("create", async () => {
       const result = await api.post("/api/projects", input);
@@ -202,6 +211,15 @@ export function App() {
       setPairing(null);
       await loadProject(project.id);
     }, "Runtime pairing revoked.");
+  }
+
+  async function deleteProject() {
+    const removed = await runAction("delete", async () => {
+      await api.delete(`/api/projects/${project.id}`);
+      await loadProjects();
+      return true;
+    }, "Project data removed from Living Blueprint.");
+    if (removed) setScreen("sample");
   }
 
   async function investigate() {
@@ -245,7 +263,18 @@ export function App() {
         <div className="topbar-actions">
           <button className="help-button" type="button" onClick={() => setTutorialOpen(true)}>How it works</button>
           {connection.connected ? (
-            <span className="connection-badge"><i></i>Replit connected</span>
+            <div className="connection-menu">
+              <button className="connection-badge" type="button" onClick={() => setConnectionMenu((open) => !open)} aria-expanded={connectionMenu}>
+                <i></i>Replit connected
+              </button>
+              {connectionMenu && (
+                <div>
+                  <strong>Replit workspace</strong>
+                  <small>OAuth tokens stay encrypted on this server.</small>
+                  <button type="button" onClick={disconnect} disabled={busyAction === "disconnect"}>Disconnect Replit</button>
+                </div>
+              )}
+            </div>
           ) : (
             <button className="button button-ink compact" type="button" onClick={connect}>Connect Replit</button>
           )}
@@ -291,6 +320,7 @@ export function App() {
             onUpdate={(changeDescription) => projectAction("update", "update", { changeDescription }, "Replit accepted the update.")}
             onPair={pair}
             onRevokePairing={revokePairing}
+            onDelete={deleteProject}
             onInvestigate={investigate}
             traces={traces}
             evidence={evidence}

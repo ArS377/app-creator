@@ -27,6 +27,7 @@ export function ProjectWorkspace({
   onUpdate,
   onPair,
   onRevokePairing,
+  onDelete,
   onInvestigate,
   traces,
   evidence,
@@ -198,6 +199,15 @@ export function ProjectWorkspace({
                   <span>−{project.manifestDiff.nodes.removed.length} removed</span>
                 </div>
               ) : <p className="no-change">Inspect a second version to calculate the first architecture diff.</p>}
+              <div className="project-danger">
+                <div>
+                  <strong>Remove this blueprint</strong>
+                  <p>This deletes its manifests, stored traces, pairing codes, and local project history. The Replit app is not deleted.</p>
+                </div>
+                <button type="button" onClick={() => {
+                  if (window.confirm("Remove this blueprint and its stored traces? The Replit app will stay in your workspace.")) onDelete();
+                }}>Remove from Living Blueprint</button>
+              </div>
             </section>
           )}
         </main>

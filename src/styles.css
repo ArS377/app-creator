@@ -204,6 +204,56 @@ svg {
   background: var(--teal);
 }
 
+.connection-menu {
+  position: relative;
+}
+
+.connection-menu > .connection-badge {
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.connection-menu > div {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 14px);
+  right: 0;
+  display: flex;
+  width: 250px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 15px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper-light);
+  box-shadow: 5px 6px 0 rgba(43, 33, 27, 0.17);
+}
+
+.connection-menu > div strong {
+  font-size: 12px;
+}
+
+.connection-menu > div small {
+  margin: 4px 0 13px;
+  color: var(--ink-soft);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.connection-menu > div button {
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid var(--fault);
+  background: transparent;
+  color: var(--fault);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .button {
   display: inline-flex;
   min-height: 42px;
@@ -2058,6 +2108,40 @@ svg {
   font-size: 12px;
 }
 
+.project-danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(43, 33, 27, 0.35);
+}
+
+.project-danger strong {
+  font-size: 11px;
+}
+
+.project-danger p {
+  max-width: 510px;
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.project-danger button {
+  flex: 0 0 auto;
+  padding: 7px 0;
+  border: 0;
+  border-bottom: 1px solid var(--fault);
+  background: transparent;
+  color: var(--fault);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Update sheet */
 .update-sheet {
   width: min(610px, 100%);
@@ -2153,6 +2237,10 @@ svg {
 
   .connection-badge,
   .help-button {
+    display: none;
+  }
+
+  .connection-menu {
     display: none;
   }
 
