@@ -1899,7 +1899,14 @@ input:focus-visible {
   }
 
   .topbar .button-quiet {
-    display: none;
+    min-height: 34px;
+    padding: 0 9px;
+    font-size: 0;
+  }
+
+  .topbar .button-quiet::after {
+    content: "Tour";
+    font-size: 0.67rem;
   }
 
   .button-primary {
