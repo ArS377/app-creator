@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createSessionStore, parseCookies } from "../server.js";
+import { MemoryDocumentStore } from "../server/document-store.js";
+import { createPersistentSessionStore } from "../server/session-store.js";
 
 test("cookie parsing handles a session among unrelated values", () => {
   assert.deepEqual(parseCookies("theme=paper; living_blueprint_session=abc123; seen=yes"), {
@@ -43,4 +45,26 @@ test("expired sessions are removed", () => {
   store.prune();
 
   assert.equal(store.size, 0);
+});
+
+test("document-backed sessions survive a new store instance", async () => {
+  const documents = new MemoryDocumentStore();
+  const firstStore = createPersistentSessionStore(documents);
+  const first = await firstStore.ensure();
+  const restartedStore = createPersistentSessionStore(documents);
+  const restored = await restartedStore.ensure(`living_blueprint_session=${first.id}`);
+
+  assert.equal(restored.id, first.id);
+  assert.equal(restored.isNew, false);
+});
+
+test("document-backed investigator limits stay scoped to one session", async () => {
+  const documents = new MemoryDocumentStore();
+  const store = createPersistentSessionStore(documents, { rateLimit: 1 });
+  const first = await store.ensure();
+  const second = await store.ensure();
+
+  assert.equal(await store.consumeInvestigatorCall(first.id), true);
+  assert.equal(await store.consumeInvestigatorCall(first.id), false);
+  assert.equal(await store.consumeInvestigatorCall(second.id), true);
 });

@@ -27,14 +27,39 @@ export class ProjectRepository {
   async remove(sessionId, projectId) {
     const project = await this.get(sessionId, projectId);
     if (!project) return false;
+
+    const [versions, manifests, traces, tokens, pairings] = await Promise.all([
+      this.documents.list(`versions:${projectId}`),
+      this.documents.list(`manifests:${projectId}`),
+      this.documents.list(`traces:${projectId}`),
+      this.documents.list("trace_tokens"),
+      this.documents.list("pairings")
+    ]);
+
+    for (const trace of traces) {
+      const events = await this.documents.list(`events:${projectId}:${trace.key}`);
+      await Promise.all(events.map((event) =>
+        this.documents.delete(`events:${projectId}:${trace.key}`, event.key)
+      ));
+    }
+    for (const version of versions) {
+      const evidence = await this.documents.list(`evidence:${projectId}:${version.key}`);
+      await Promise.all(evidence.map((entry) =>
+        this.documents.delete(`evidence:${projectId}:${version.key}`, entry.key)
+      ));
+    }
+
     await Promise.all([
       this.documents.delete(this.projectNamespace(sessionId), projectId),
-      ...((await this.documents.list(`versions:${projectId}`)).map((entry) =>
-        this.documents.delete(`versions:${projectId}`, entry.key)
-      )),
-      ...((await this.documents.list(`manifests:${projectId}`)).map((entry) =>
-        this.documents.delete(`manifests:${projectId}`, entry.key)
-      ))
+      ...versions.map((entry) => this.documents.delete(`versions:${projectId}`, entry.key)),
+      ...manifests.map((entry) => this.documents.delete(`manifests:${projectId}`, entry.key)),
+      ...traces.map((entry) => this.documents.delete(`traces:${projectId}`, entry.key)),
+      ...tokens
+        .filter((entry) => entry.value.projectId === projectId)
+        .map((entry) => this.documents.delete("trace_tokens", entry.key)),
+      ...pairings
+        .filter((entry) => entry.value.projectId === projectId)
+        .map((entry) => this.documents.delete("pairings", entry.key))
     ]);
     return true;
   }

@@ -17,7 +17,7 @@ import { PairingService } from "./pairing-service.js";
 import { createSignedTokenService } from "./signed-token.js";
 import { createTraceRouter } from "./trace-routes.js";
 import { TraceStore } from "./trace-store.js";
-import { createSessionStore, sessionCookieName } from "./session-store.js";
+import { createPersistentSessionStore, sessionCookieName } from "./session-store.js";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -43,28 +43,32 @@ function securityHeaders(_request, response, next) {
 }
 
 function sessionMiddleware(sessionStore) {
-  return (request, response, next) => {
-    const session = sessionStore.ensure(request.headers.cookie || "");
-    request.livingBlueprintSession = session;
-    if (session.isNew) {
-      const secure =
-        process.env.REPLIT_DEPLOYMENT === "1" ||
-        String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim() === "https";
-      response.cookie(sessionCookieName, session.id, {
-        httpOnly: true,
-        maxAge: 30 * 60 * 1000,
-        sameSite: "lax",
-        secure
-      });
+  return async (request, response, next) => {
+    try {
+      const session = await sessionStore.ensure(request.headers.cookie || "");
+      request.livingBlueprintSession = session;
+      if (session.isNew) {
+        const secure =
+          process.env.REPLIT_DEPLOYMENT === "1" ||
+          String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim() === "https";
+        response.cookie(sessionCookieName, session.id, {
+          httpOnly: true,
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+          sameSite: "lax",
+          secure
+        });
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    next();
   };
 }
 
 export async function createLivingBlueprintApp(options = {}) {
   const app = express();
-  const sessionStore = options.sessionStore || createSessionStore();
   const documentStore = options.documentStore || createDocumentStore();
+  const sessionStore = options.sessionStore || createPersistentSessionStore(documentStore);
   const investigator = options.investigator || investigateTrace;
   const vault = options.vault || createCryptoVault(
     process.env.SESSION_SECRET || "living-blueprint-local-development"
@@ -96,8 +100,10 @@ export async function createLivingBlueprintApp(options = {}) {
   app.use(securityHeaders);
   app.use(sessionMiddleware(sessionStore));
   app.use(express.json({ limit: "64kb", strict: true }));
-  app.use(createReplitRouter(replit));
-  app.use(createProjectRouter(projects));
+  app.use(createReplitRouter(replit, {
+    onDisconnect: (sessionId) => pairings.revokeSession(sessionId)
+  }));
+  app.use(createProjectRouter(projects, { pairings }));
   app.use(createTraceRouter({ pairings, traces, repository: projectRepository }));
 
   app.use("/bridge", (_request, response, next) => {
@@ -119,7 +125,7 @@ export async function createLivingBlueprintApp(options = {}) {
 
   app.post("/api/investigate", async (request, response) => {
     const sessionId = request.livingBlueprintSession.id;
-    if (!sessionStore.consumeInvestigatorCall(sessionId)) {
+    if (!(await sessionStore.consumeInvestigatorCall(sessionId))) {
       response.setHeader("retry-after", "60");
       response.status(429).json({ error: "This session has reached the investigator limit." });
       return;

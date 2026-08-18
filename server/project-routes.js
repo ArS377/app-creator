@@ -26,7 +26,7 @@ function asyncRoute(handler) {
   return (request, response, next) => Promise.resolve(handler(request, response)).catch(next);
 }
 
-export function createProjectRouter(projects) {
+export function createProjectRouter(projects, options = {}) {
   const router = Router();
 
   router.get("/api/projects", asyncRoute(async (request, response) => {
@@ -91,6 +91,12 @@ export function createProjectRouter(projects) {
   }));
 
   router.delete("/api/projects/:projectId", asyncRoute(async (request, response) => {
+    await options.pairings?.revokeProject(
+      request.livingBlueprintSession.id,
+      request.params.projectId
+    ).catch((error) => {
+      if (!/not found/i.test(error.message)) throw error;
+    });
     const removed = await projects.repository.remove(
       request.livingBlueprintSession.id,
       request.params.projectId

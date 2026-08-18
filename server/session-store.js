@@ -71,3 +71,45 @@ export function createSessionStore(options = {}) {
     }
   };
 }
+
+export function createPersistentSessionStore(documentStore, options = {}) {
+  const ttlMs = options.ttlMs || 30 * 24 * 60 * 60 * 1000;
+  const rateWindowMs = options.rateWindowMs || 60 * 1000;
+  const rateLimit = options.rateLimit || 15;
+  const now = options.now || Date.now;
+
+  async function ensure(cookieHeader = "") {
+    const candidateId = parseCookies(cookieHeader)[sessionCookieName];
+    const currentTime = now();
+    if (sessionIdPattern.test(candidateId || "")) {
+      const existing = await documentStore.get("sessions", candidateId);
+      if (existing && existing.expiresAt > currentTime) {
+        existing.expiresAt = currentTime + ttlMs;
+        await documentStore.put("sessions", candidateId, existing, { expiresAt: existing.expiresAt });
+        return { id: candidateId, isNew: false };
+      }
+    }
+
+    const id = randomUUID();
+    const session = { expiresAt: currentTime + ttlMs, investigatorCalls: [] };
+    await documentStore.put("sessions", id, session, { expiresAt: session.expiresAt });
+    return { id, isNew: true };
+  }
+
+  async function consumeInvestigatorCall(id) {
+    const session = await documentStore.get("sessions", id);
+    if (!session) return false;
+    const cutoff = now() - rateWindowMs;
+    session.investigatorCalls = (session.investigatorCalls || []).filter((timestamp) => timestamp > cutoff);
+    if (session.investigatorCalls.length >= rateLimit) return false;
+    session.investigatorCalls.push(now());
+    await documentStore.put("sessions", id, session, { expiresAt: session.expiresAt });
+    return true;
+  }
+
+  return {
+    ensure,
+    consumeInvestigatorCall,
+    prune: () => documentStore.prune()
+  };
+}

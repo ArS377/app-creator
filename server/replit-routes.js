@@ -6,7 +6,7 @@ function publicOrigin(request) {
   return `${protocol}://${request.get("host")}`;
 }
 
-export function createReplitRouter(replit) {
+export function createReplitRouter(replit, options = {}) {
   const router = Router();
 
   router.get("/api/replit/connection", async (request, response, next) => {
@@ -47,6 +47,7 @@ export function createReplitRouter(replit) {
 
   router.post("/api/replit/disconnect", async (request, response, next) => {
     try {
+      await options.onDisconnect?.(request.livingBlueprintSession.id);
       await replit.disconnect(request.livingBlueprintSession.id);
       response.status(204).end();
     } catch (error) {

@@ -93,3 +93,21 @@ test("publication status records only the runtime URL returned by Replit", async
   assert.equal(published.runtimeUrl, "https://fieldnotes.replit.app");
   assert.deepEqual(replit.calls.slice(-2).map((call) => call.name), ["publish_app", "get_publish_status"]);
 });
+
+test("removing a project clears versions, traces, evidence, and active tokens", async () => {
+  const documents = new MemoryDocumentStore();
+  const repository = new ProjectRepository(documents);
+  await repository.save("session", { id: "project", name: "Project", updatedAt: new Date().toISOString() });
+  await repository.saveVersion("project", { id: "version", projectId: "project", createdAt: new Date().toISOString() });
+  await documents.put("traces:project", "trace", { id: "trace", projectId: "project" });
+  await documents.put("events:project:trace", "event", { id: "event" });
+  await documents.put("evidence:project:version", "node", { nodeId: "node" });
+  await documents.put("trace_tokens", "token", { projectId: "project" });
+  await documents.put("pairings", "pairing", { projectId: "project" });
+
+  assert.equal(await repository.remove("session", "project"), true);
+  assert.equal(await documents.get("events:project:trace", "event"), null);
+  assert.equal(await documents.get("evidence:project:version", "node"), null);
+  assert.equal(await documents.get("trace_tokens", "token"), null);
+  assert.equal(await documents.get("pairings", "pairing"), null);
+});

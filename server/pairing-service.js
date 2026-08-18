@@ -100,4 +100,15 @@ export class PairingService {
       .map((entry) => this.documents.delete("trace_tokens", entry.key)));
     await this.repository.save(sessionId, { ...project, pairingStatus: "disconnected" });
   }
+
+  async revokeSession(sessionId) {
+    const tokens = await this.documents.list("trace_tokens");
+    await Promise.all(tokens
+      .filter((entry) => entry.value.sessionId === sessionId)
+      .map((entry) => this.documents.delete("trace_tokens", entry.key)));
+    const projects = await this.repository.list(sessionId);
+    await Promise.all(projects.map((project) =>
+      this.repository.save(sessionId, { ...project, pairingStatus: "disconnected" })
+    ));
+  }
 }
