@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="See how one action moves through an AI-generated app, then break it safely and inspect the evidence."
+    />
+    <title>Living Blueprint</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Living Blueprint home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M5 23V9l11-6 11 6v14l-11 6-11-6Z" />
+          <path d="m5 9 11 6 11-6M16 15v14" />
+        </svg>
+        <span>Living Blueprint</span>
+      </a>
+
+      <div class="project-identity" aria-label="Current project">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>Research desk</span>
+        <span class="quiet">prepared Replit app</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="button button-quiet" type="button" data-action="tutorial">
+          How it works
+        </button>
+        <button class="button button-primary" type="button" data-action="replay-build">
+          Watch build replay
+        </button>
+      </div>
+    </header>
+
+    <section class="prompt-strip" aria-label="Sample app prompt">
+      <span class="prompt-label">Sample prompt</span>
+      <p>
+        Build a research desk where I can save useful articles with a note and source link.
+      </p>
+      <button class="text-button" type="button" data-action="replay-update">
+        Watch update replay
+        <span aria-hidden="true">↗</span>
+      </button>
+    </section>
+
+    <nav class="mobile-tabs" aria-label="Workspace panels">
+      <button class="mobile-tab is-active" type="button" data-panel-target="app">App</button>
+      <button class="mobile-tab" type="button" data-panel-target="map">Map</button>
+      <button class="mobile-tab" type="button" data-panel-target="diagnosis">Diagnosis</button>
+    </nav>
+
+    <main class="workspace" id="workspace">
+      <section class="work-panel app-panel is-active" data-panel="app" aria-labelledby="app-title">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">01 · Try the app</p>
+            <h1 id="app-title">Research desk</h1>
+          </div>
+          <span class="live-indicator"><span></span> Live</span>
+        </header>
+
+        <div class="app-canvas">
+          <div class="sample-app-bar">
+            <span class="sample-app-title">Fieldnotes</span>
+            <span>3 findings</span>
+          </div>
+
+          <form class="finding-form" aria-label="Save a research finding">
+            <label>
+              What did you find?
+              <input type="text" value="Small teams ship faster with visible system boundaries" />
+            </label>
+            <label>
+              Source
+              <input type="url" value="https://example.com/research" />
+            </label>
+            <button class="button button-dark" type="submit" disabled>Save finding</button>
+          </form>
+
+          <div class="finding-list" aria-label="Saved findings">
+            <article>
+              <span class="finding-number">03</span>
+              <p>Interview notes reveal where handoffs slow down.</p>
+            </article>
+            <article>
+              <span class="finding-number">02</span>
+              <p>Short feedback loops make rough ideas easier to test.</p>
+            </article>
+          </div>
+        </div>
+
+        <footer class="panel-note">
+          This is a live sample. Its trace will appear beside it when you save a finding.
+        </footer>
+      </section>
+
+      <section class="work-panel map-panel" data-panel="map" aria-labelledby="map-title">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">02 · Follow the action</p>
+            <h2 id="map-title">System map</h2>
+          </div>
+          <button class="icon-button" type="button" aria-label="Fit system map" title="Fit map">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M7 3H3v4M13 3h4v4M7 17H3v-4M13 17h4v-4" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="map-stage" aria-label="Application system map">
+          <svg class="map-wires" viewBox="0 0 600 430" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M112 110C190 110 190 215 275 215" />
+            <path d="M325 215C410 215 410 110 488 110" />
+            <path d="M325 215C410 215 410 330 488 330" />
+          </svg>
+
+          <button class="system-node node-browser" type="button">
+            <span class="node-kicker">Client</span>
+            <strong>Browser</strong>
+            <span>Save form</span>
+          </button>
+          <button class="system-node node-api" type="button">
+            <span class="node-kicker">Server</span>
+            <strong>API route</strong>
+            <span>POST /findings</span>
+          </button>
+          <button class="system-node node-database" type="button">
+            <span class="node-kicker">Storage</span>
+            <strong>Database</strong>
+            <span>insert finding</span>
+          </button>
+          <button class="system-node node-stream" type="button">
+            <span class="node-kicker">Telemetry</span>
+            <strong>Trace stream</strong>
+            <span>session events</span>
+          </button>
+        </div>
+
+        <div class="map-legend" aria-label="System map legend">
+          <span><i class="legend-dot observed"></i> Observed</span>
+          <span><i class="legend-dot inferred"></i> Inferred</span>
+          <span><i class="legend-dot fault"></i> Test fault</span>
+        </div>
+      </section>
+
+      <aside class="work-panel diagnosis-panel" data-panel="diagnosis" aria-labelledby="diagnosis-title">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">03 · Read the evidence</p>
+            <h2 id="diagnosis-title">Investigator</h2>
+          </div>
+          <span class="investigator-mark" aria-hidden="true">✦</span>
+        </header>
+
+        <div class="empty-diagnosis">
+          <svg viewBox="0 0 80 80" aria-hidden="true">
+            <circle cx="40" cy="40" r="27" />
+            <path d="M40 24v18l12 7" />
+          </svg>
+          <h3>Waiting for an action</h3>
+          <p>Save one finding. The investigator will explain what happened and link each claim to the trace.</p>
+        </div>
+
+        <div class="fault-dock">
+          <div>
+            <span class="fault-label">Fault Lab</span>
+            <strong>Reject database write</strong>
+          </div>
+          <button class="switch" type="button" role="switch" aria-checked="false" aria-label="Reject database write">
+            <span></span>
+          </button>
+        </div>
+      </aside>
+    </main>
+
+    <section class="timeline" aria-labelledby="timeline-title">
+      <div class="timeline-heading">
+        <div>
+          <span class="eyebrow">Trace playback</span>
+          <h2 id="timeline-title">No action recorded yet</h2>
+        </div>
+        <output>0 ms</output>
+      </div>
+      <div class="timeline-track" aria-hidden="true">
+        <span class="timeline-progress"></span>
+        <span class="timeline-handle"></span>
+      </div>
+      <div class="timeline-scale" aria-hidden="true">
+        <span>Browser</span>
+        <span>API</span>
+        <span>Database</span>
+        <span>Response</span>
+      </div>
+    </section>
+
+    <div class="announcement" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
