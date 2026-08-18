@@ -6,7 +6,10 @@ import { randomUUID } from "node:crypto";
 import express from "express";
 
 import { investigateTrace } from "../lib/investigator.js";
+import { createCryptoVault, EncryptedCredentialStore } from "./crypto-vault.js";
 import { createDocumentStore } from "./document-store.js";
+import { ReplitMcpService } from "./replit-mcp.js";
+import { createReplitRouter } from "./replit-routes.js";
 import { createSessionStore, sessionCookieName } from "./session-store.js";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -55,16 +58,23 @@ export async function createLivingBlueprintApp(options = {}) {
   const sessionStore = options.sessionStore || createSessionStore();
   const documentStore = options.documentStore || createDocumentStore();
   const investigator = options.investigator || investigateTrace;
+  const vault = options.vault || createCryptoVault(
+    process.env.SESSION_SECRET || "living-blueprint-local-development"
+  );
+  const credentials = options.credentials || new EncryptedCredentialStore(documentStore, vault);
+  const replit = options.replit || new ReplitMcpService({ credentials });
   const healthStartedAt = Date.now();
 
   await documentStore.init();
   app.locals.documentStore = documentStore;
   app.locals.sessionStore = sessionStore;
+  app.locals.replit = replit;
 
   app.disable("x-powered-by");
   app.use(securityHeaders);
   app.use(sessionMiddleware(sessionStore));
   app.use(express.json({ limit: "64kb", strict: true }));
+  app.use(createReplitRouter(replit));
 
   app.get("/api/health", (_request, response) => {
     response.json({
