@@ -166,8 +166,7 @@ input:focus-visible {
   background: transparent;
 }
 
-.button-quiet:hover,
-.icon-button:hover {
+.button-quiet:hover {
   background: var(--paper-deep);
 }
 
@@ -448,23 +447,6 @@ input:focus-visible {
   color: var(--ink-soft);
   font-size: 0.7rem;
   line-height: 1.5;
-}
-
-.icon-button {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: transparent;
-}
-
-.icon-button svg {
-  width: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
 }
 
 .map-panel {
