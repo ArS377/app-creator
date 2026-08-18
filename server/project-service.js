@@ -91,7 +91,11 @@ export class ProjectService {
     });
 
     const argumentsValue = {
-      appDescription: generationPrompt(input.prompt, { appId: id, versionId }),
+      appDescription: generationPrompt(input.prompt, {
+        appId: id,
+        versionId,
+        controlOrigin: new URL(redirectUrl).origin
+      }),
       app_stack: "react_website",
       userSpecifiedAppName: project.name
     };
@@ -159,7 +163,11 @@ export class ProjectService {
     try {
       const result = await this.replit.callTool(sessionId, redirectUrl, "update_app_using_prompt", {
         replId: project.replId,
-        changeDescription: updatePrompt(changeDescription, { appId: project.id, versionId })
+        changeDescription: updatePrompt(changeDescription, {
+          appId: project.id,
+          versionId,
+          controlOrigin: new URL(redirectUrl).origin
+        })
       });
       const data = toolResultData(result);
       const turnId = String(findValue(data, ["turnId", "turn_id"]) || "");

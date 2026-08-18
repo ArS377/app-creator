@@ -37,6 +37,12 @@ export class MemoryDocumentStore {
     return this.documents.delete(`${namespace}:${key}`);
   }
 
+  async take(namespace, key) {
+    const value = await this.get(namespace, key);
+    if (value !== null) this.documents.delete(`${namespace}:${key}`);
+    return value;
+  }
+
   async list(namespace) {
     const values = [];
     for (const document of this.documents.values()) {
@@ -107,6 +113,16 @@ export class PostgresDocumentStore {
       [namespace, key]
     );
     return result.rowCount > 0;
+  }
+
+  async take(namespace, key) {
+    const result = await this.pool.query(
+      `DELETE FROM living_blueprint_documents
+       WHERE namespace = $1 AND key = $2 AND (expires_at IS NULL OR expires_at > NOW())
+       RETURNING value`,
+      [namespace, key]
+    );
+    return result.rows[0]?.value || null;
   }
 
   async list(namespace) {

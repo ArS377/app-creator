@@ -30,3 +30,11 @@ test("returned documents cannot mutate the stored value", async () => {
 
   assert.equal((await store.get("manifests", "one")).nodes[0].id, "route:GET:/");
 });
+
+test("taking a document returns it once", async () => {
+  const store = new MemoryDocumentStore();
+  await store.put("pairings", "one", { projectId: "project" });
+
+  assert.deepEqual(await store.take("pairings", "one"), { projectId: "project" });
+  assert.equal(await store.take("pairings", "one"), null);
+});

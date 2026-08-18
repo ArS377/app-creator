@@ -13,6 +13,10 @@ import { ProjectRepository } from "./project-repository.js";
 import { ProjectService } from "./project-service.js";
 import { ReplitMcpService } from "./replit-mcp.js";
 import { createReplitRouter } from "./replit-routes.js";
+import { PairingService } from "./pairing-service.js";
+import { createSignedTokenService } from "./signed-token.js";
+import { createTraceRouter } from "./trace-routes.js";
+import { TraceStore } from "./trace-store.js";
 import { createSessionStore, sessionCookieName } from "./session-store.js";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -68,6 +72,15 @@ export async function createLivingBlueprintApp(options = {}) {
   const replit = options.replit || new ReplitMcpService({ credentials });
   const projectRepository = options.projectRepository || new ProjectRepository(documentStore);
   const projects = options.projects || new ProjectService({ repository: projectRepository, replit });
+  const tokenService = options.tokenService || createSignedTokenService(
+    process.env.SESSION_SECRET || "living-blueprint-local-development"
+  );
+  const pairings = options.pairings || new PairingService({
+    documentStore,
+    repository: projectRepository,
+    tokens: tokenService
+  });
+  const traces = options.traces || new TraceStore({ documentStore });
   const healthStartedAt = Date.now();
 
   await documentStore.init();
@@ -75,6 +88,8 @@ export async function createLivingBlueprintApp(options = {}) {
   app.locals.sessionStore = sessionStore;
   app.locals.replit = replit;
   app.locals.projects = projects;
+  app.locals.pairings = pairings;
+  app.locals.traces = traces;
 
   app.disable("x-powered-by");
   app.use(securityHeaders);
@@ -82,6 +97,13 @@ export async function createLivingBlueprintApp(options = {}) {
   app.use(express.json({ limit: "64kb", strict: true }));
   app.use(createReplitRouter(replit));
   app.use(createProjectRouter(projects));
+  app.use(createTraceRouter({ pairings, traces, repository: projectRepository }));
+
+  app.use("/bridge", (_request, response, next) => {
+    response.setHeader("access-control-allow-origin", "*");
+    response.setHeader("cross-origin-resource-policy", "cross-origin");
+    next();
+  });
 
   app.get("/api/health", (_request, response) => {
     response.json({

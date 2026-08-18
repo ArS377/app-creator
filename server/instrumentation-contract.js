@@ -16,6 +16,10 @@ ${contract}
 Project identity:
 - appId: ${identifiers.appId}
 - versionId: ${identifiers.versionId}
+- observation module: ${identifiers.controlOrigin}/bridge/v1.js
+- observation control origin: ${identifiers.controlOrigin}
+
+Import createLivingBlueprintBridge from the observation module in the browser entry point. Initialize it with { projectId: "${identifiers.appId}", controlOrigin: "${identifiers.controlOrigin}" }. Wrap only important user actions. The module contains no credential and stays inactive until the user pairs the runtime.
 
 Build the requested product first. Treat observation as a small supporting layer, not the visual theme of the app.`;
 }
@@ -29,7 +33,9 @@ ${contract}
 
 Current project identity:
 - appId: ${identifiers.appId}
-- versionId: ${identifiers.versionId}`;
+- versionId: ${identifiers.versionId}
+- observation module: ${identifiers.controlOrigin}/bridge/v1.js
+- observation control origin: ${identifiers.controlOrigin}`;
 }
 
 export function manifestQuestion(identifiers) {
