@@ -31,3 +31,17 @@ test("encrypted credentials are bound to their browser session", async () => {
 
   await assert.rejects(() => credentials.get("session-two"));
 });
+
+test("legacy credential envelopes migrate to the BluePrinted context", async () => {
+  const documents = new MemoryDocumentStore();
+  const vault = createCryptoVault("a-test-secret-that-is-long-enough");
+  const credentials = new EncryptedCredentialStore(documents, vault);
+  const sessionId = "session-one";
+  const value = { tokens: { access_token: "legacy-secret" } };
+  const legacyEnvelope = vault.seal(value, `living-blueprint:oauth:${sessionId}:replit`);
+  await documents.put(`oauth:${sessionId}`, "replit", legacyEnvelope);
+
+  assert.deepEqual(await credentials.get(sessionId), value);
+  const migratedEnvelope = await documents.get(`oauth:${sessionId}`, "replit");
+  assert.deepEqual(vault.open(migratedEnvelope, `blueprinted:oauth:${sessionId}:replit`), value);
+});

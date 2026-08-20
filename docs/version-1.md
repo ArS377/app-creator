@@ -1,10 +1,10 @@
 # Version 1 implementation contract
 
-This document records the boundary between Living Blueprint and the public Replit MCP as of August 18, 2026. The official reference is [Replit MCP Server](https://docs.replit.com/platforms/mcp-server).
+This document records the boundary between BluePrinted and the public Replit MCP as of August 18, 2026. The official reference is [Replit MCP Server](https://docs.replit.com/platforms/mcp-server).
 
 ## What the integration can do
 
-Living Blueprint connects to `https://replit-mcp.com/server/mcp` over Streamable HTTP. OAuth 2.1 with PKCE protects the connection. Tokens, client registration data, code verifiers, and state stay encrypted on the server.
+BluePrinted connects to `https://replit-mcp.com/server/mcp` over Streamable HTTP. OAuth 2.1 with PKCE protects the connection. Tokens, client registration data, code verifiers, and state stay encrypted on the server.
 
 The current public tools support the full project loop:
 
@@ -15,13 +15,13 @@ The current public tools support the full project loop:
 - `publish_app` publishes the current app version.
 - `get_publish_status` returns the publication state and public URL.
 
-Creation and updates are asynchronous. An MCP timeout does not prove failure and must not trigger a duplicate request. Living Blueprint records the accepted operation, shows the editor URL, and lets the user run a fresh inspection when Agent finishes.
+Creation and updates are asynchronous. An MCP timeout does not prove failure and must not trigger a duplicate request. BluePrinted records the accepted operation, shows the editor URL, and lets the user run a fresh inspection when Agent finishes.
 
 ## What the integration cannot do
 
 The current public tools do not install a Replit Secret or expose Agent's private reasoning. The interface does not imitate either ability.
 
-Living Blueprint only shows states supported by a returned tool result, a validated manifest, publication status, or runtime evidence.
+BluePrinted only shows states supported by a returned tool result, a validated manifest, publication status, or runtime evidence.
 
 ## Generated-app contract
 
@@ -33,7 +33,7 @@ When `SOURCE_REPL_ID` is configured, creation starts from the maintained instrum
 4. expose a health description that contains no secrets or user data;
 5. keep the bridge in later updates.
 
-After creation or update, Living Blueprint uses `ask_question` to request strict manifest JSON. It validates the shape, caps the number of nodes and edges, and marks the result as inferred. Only matching runtime events promote a node to observed.
+After creation or update, BluePrinted uses `ask_question` to request strict manifest JSON. It validates the shape, caps the number of nodes and edges, and marks the result as inferred. Only matching runtime events promote a node to observed.
 
 Prompt instructions are not a security boundary. The ingest service validates and sanitizes every event itself.
 
@@ -53,7 +53,7 @@ This token cannot call Replit, modify an app, read stored traces, or run an inve
 - `draft`: the user has not sent the prompt.
 - `creating`: the create request is in flight.
 - `agent_working`: Replit returned a Repl ID or the call timed out after acceptance.
-- `inspecting`: Living Blueprint is asking for the manifest.
+- `inspecting`: BluePrinted is asking for the manifest.
 - `publishing`: Replit is publishing the current app version.
 - `published`: Replit returned a public runtime URL.
 - `observable`: a valid manifest and runtime pairing are available.

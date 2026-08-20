@@ -11,7 +11,7 @@ export function createReplitRouter(replit, options = {}) {
 
   router.get("/api/replit/connection", async (request, response, next) => {
     try {
-      response.json(await replit.status(request.livingBlueprintSession.id));
+      response.json(await replit.status(request.bluePrintedSession.id));
     } catch (error) {
       next(error);
     }
@@ -20,7 +20,7 @@ export function createReplitRouter(replit, options = {}) {
   router.get("/auth/replit/start", async (request, response, next) => {
     try {
       const redirectUrl = `${publicOrigin(request, options.publicOrigin)}/auth/replit/callback`;
-      const result = await replit.beginAuthorization(request.livingBlueprintSession.id, redirectUrl);
+      const result = await replit.beginAuthorization(request.bluePrintedSession.id, redirectUrl);
       response.redirect(result.connected ? "/?replit=connected" : result.authorizationUrl);
     } catch (error) {
       next(error);
@@ -35,7 +35,7 @@ export function createReplitRouter(replit, options = {}) {
 
     try {
       const redirectUrl = `${publicOrigin(request, options.publicOrigin)}/auth/replit/callback`;
-      await replit.finishAuthorization(request.livingBlueprintSession.id, redirectUrl, {
+      await replit.finishAuthorization(request.bluePrintedSession.id, redirectUrl, {
         code: String(request.query.code || ""),
         state: String(request.query.state || "")
       });
@@ -47,8 +47,8 @@ export function createReplitRouter(replit, options = {}) {
 
   router.post("/api/replit/disconnect", async (request, response, next) => {
     try {
-      await options.onDisconnect?.(request.livingBlueprintSession.id);
-      await replit.disconnect(request.livingBlueprintSession.id);
+      await options.onDisconnect?.(request.bluePrintedSession.id);
+      await replit.disconnect(request.bluePrintedSession.id);
       response.status(204).end();
     } catch (error) {
       next(error);

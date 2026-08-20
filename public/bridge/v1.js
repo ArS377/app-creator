@@ -22,7 +22,7 @@ function allowlistedEvent(event) {
     .map((key) => [key, event[key]]));
 }
 
-export function createLivingBlueprintBridge(options) {
+export function createBluePrintedBridge(options) {
   const controlOrigin = new URL(options.controlOrigin).origin;
   let socket = null;
   let pairingPromise = null;
@@ -33,7 +33,7 @@ export function createLivingBlueprintBridge(options) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ code })
     });
-    if (!response.ok) throw new Error("Living Blueprint pairing failed.");
+    if (!response.ok) throw new Error("BluePrinted pairing failed.");
     const pairing = await response.json();
     socket = new WebSocket(pairing.websocketUrl, ["lb-trace-v1", pairing.token]);
     await new Promise((resolve, reject) => {

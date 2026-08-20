@@ -9,7 +9,7 @@ function replitOrigin(environment) {
 export function loadRuntimeConfig(environment = process.env) {
   const production = environment.NODE_ENV === "production" || environment.REPLIT_DEPLOYMENT === "1";
   const publicOrigin = String(environment.PUBLIC_ORIGIN || replitOrigin(environment)).replace(/\/$/, "");
-  const sessionSecret = environment.SESSION_SECRET || (production ? "" : "living-blueprint-local-development");
+  const sessionSecret = environment.SESSION_SECRET || (production ? "" : "blueprinted-local-development");
   const databaseUrl = environment.DATABASE_URL || "";
 
   if (sessionSecret && sessionSecret.length < 16) {

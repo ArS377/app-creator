@@ -28,7 +28,7 @@ function randomState() {
 }
 
 function defaultClientFactory() {
-  return new Client({ name: "living-blueprint", version: "1.0.0" }, { capabilities: {} });
+  return new Client({ name: "blueprinted", version: "1.0.0" }, { capabilities: {} });
 }
 
 function defaultTransportFactory(provider) {

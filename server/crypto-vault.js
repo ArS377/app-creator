@@ -58,13 +58,27 @@ export class EncryptedCredentialStore {
   }
 
   context(sessionId) {
+    return `blueprinted:oauth:${sessionId}:replit`;
+  }
+
+  legacyContext(sessionId) {
     return `living-blueprint:oauth:${sessionId}:replit`;
   }
 
   async get(sessionId) {
     const envelope = await this.documents.get(this.namespace(sessionId), "replit");
     if (!envelope) return {};
-    return this.vault.open(envelope, this.context(sessionId));
+    try {
+      return this.vault.open(envelope, this.context(sessionId));
+    } catch (error) {
+      try {
+        const value = this.vault.open(envelope, this.legacyContext(sessionId));
+        await this.put(sessionId, value);
+        return value;
+      } catch {
+        throw error;
+      }
+    }
   }
 
   async put(sessionId, value) {

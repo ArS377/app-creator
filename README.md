@@ -1,6 +1,6 @@
-# Living Blueprint
+# BluePrinted
 
-Living Blueprint creates a Replit app, turns its architecture into a readable map, and uses runtime evidence to show what the app actually did.
+BluePrinted creates a Replit app, turns its architecture into a readable map, and uses runtime evidence to show what the app actually did.
 
 The output is both a working Replit app and a versioned technical record:
 
@@ -21,7 +21,7 @@ The prepared research-desk sample works before sign-in. It includes a successful
 5. Use the app and watch its actions confirm the map.
 6. Send an update, inspect again, and compare the two snapshots.
 
-Living Blueprint shows only states backed by an MCP result, a validated manifest, publication status, or a runtime event. It does not display invented build percentages or Agent's private reasoning.
+BluePrinted shows only states backed by an MCP result, a validated manifest, publication status, or a runtime event. It does not display invented build percentages or Agent's private reasoning.
 
 ## Stack
 
@@ -81,7 +81,7 @@ Production startup stops with a clear error when the session secret, database, o
 
 ## Replit connection
 
-The server connects to `https://replit-mcp.com/server/mcp` through Streamable HTTP and OAuth 2.1 with PKCE. The MCP SDK handles protected-resource discovery, dynamic client registration, PKCE, token exchange, and token refresh. Living Blueprint supplies the callback route, state check, encrypted token storage, and disconnect cleanup.
+The server connects to `https://replit-mcp.com/server/mcp` through Streamable HTTP and OAuth 2.1 with PKCE. The MCP SDK handles protected-resource discovery, dynamic client registration, PKCE, token exchange, and token refresh. BluePrinted supplies the callback route, state check, encrypted token storage, and disconnect cleanup.
 
 The integration uses these public tools:
 
@@ -98,11 +98,11 @@ Creation and updates can outlive an MCP request. A timeout is recorded as an unk
 
 ## Runtime evidence
 
-The browser bridge is published at `/bridge/v1.js`. Generated apps import `createLivingBlueprintBridge`, provide the project ID and control-plane origin, then wrap the important user actions.
+The browser bridge is published at `/bridge/v1.js`. Generated apps import `createBluePrintedBridge`, provide the project ID and control-plane origin, then wrap the important user actions.
 
 The pairing path is deliberately narrow:
 
-1. Living Blueprint issues a random code tied to the project, version, exact runtime origin, browser session, and five-minute expiry.
+1. BluePrinted issues a random code tied to the project, version, exact runtime origin, browser session, and five-minute expiry.
 2. The code is sent with strict-origin `postMessage` to the frame or synchronized window.
 3. The runtime exchanges it once for a signed trace token.
 4. The token can submit trace events for one project. It cannot call Replit, change an app, read traces, or run the investigator.

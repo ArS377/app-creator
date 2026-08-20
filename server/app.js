@@ -47,8 +47,8 @@ function sessionMiddleware(sessionStore) {
   return async (request, response, next) => {
     try {
       const session = await sessionStore.ensure(request.headers.cookie || "");
-      request.livingBlueprintSession = session;
-      if (session.isNew) {
+      request.bluePrintedSession = session;
+      if (session.isNew || session.shouldRefreshCookie) {
         const secure =
           process.env.REPLIT_DEPLOYMENT === "1" ||
           String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim() === "https";
@@ -66,7 +66,7 @@ function sessionMiddleware(sessionStore) {
   };
 }
 
-export async function createLivingBlueprintApp(options = {}) {
+export async function createBluePrintedApp(options = {}) {
   const app = express();
   const config = options.config || loadRuntimeConfig();
   const documentStore = options.documentStore || createDocumentStore({
@@ -130,7 +130,7 @@ export async function createLivingBlueprintApp(options = {}) {
   app.get("/api/health", (_request, response) => {
     response.json({
       status: "ok",
-      service: "living-blueprint",
+      service: "blueprinted",
       version: "1.0.0",
       persistence: config.databaseUrl ? "postgres" : "memory",
       investigator: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL ? "ai-ready" : "local-fallback",
@@ -139,7 +139,7 @@ export async function createLivingBlueprintApp(options = {}) {
   });
 
   app.post("/api/investigate", async (request, response) => {
-    const sessionId = request.livingBlueprintSession.id;
+    const sessionId = request.bluePrintedSession.id;
     if (!(await sessionStore.consumeInvestigatorCall(sessionId))) {
       response.setHeader("retry-after", "60");
       response.status(429).json({ error: "This session has reached the investigator limit." });

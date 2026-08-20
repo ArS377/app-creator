@@ -67,7 +67,21 @@ export class PostgresDocumentStore {
 
   async init() {
     await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS living_blueprint_documents (
+      DO $$
+      BEGIN
+        IF to_regclass('public.blueprinted_documents') IS NULL
+          AND to_regclass('public.living_blueprint_documents') IS NOT NULL THEN
+          ALTER TABLE living_blueprint_documents RENAME TO blueprinted_documents;
+          IF to_regclass('public.blueprinted_documents_expiry') IS NULL
+            AND to_regclass('public.living_blueprint_documents_expiry') IS NOT NULL THEN
+            ALTER INDEX living_blueprint_documents_expiry RENAME TO blueprinted_documents_expiry;
+          END IF;
+        END IF;
+      END
+      $$
+    `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS blueprinted_documents (
         namespace TEXT NOT NULL,
         key TEXT NOT NULL,
         value JSONB NOT NULL,
@@ -77,8 +91,8 @@ export class PostgresDocumentStore {
       )
     `);
     await this.pool.query(`
-      CREATE INDEX IF NOT EXISTS living_blueprint_documents_expiry
-      ON living_blueprint_documents (expires_at)
+      CREATE INDEX IF NOT EXISTS blueprinted_documents_expiry
+      ON blueprinted_documents (expires_at)
       WHERE expires_at IS NOT NULL
     `);
   }
@@ -89,7 +103,7 @@ export class PostgresDocumentStore {
 
   async get(namespace, key) {
     const result = await this.pool.query(
-      `SELECT value FROM living_blueprint_documents
+      `SELECT value FROM blueprinted_documents
        WHERE namespace = $1 AND key = $2 AND (expires_at IS NULL OR expires_at > NOW())`,
       [namespace, key]
     );
@@ -98,7 +112,7 @@ export class PostgresDocumentStore {
 
   async put(namespace, key, value, options = {}) {
     await this.pool.query(
-      `INSERT INTO living_blueprint_documents (namespace, key, value, expires_at)
+      `INSERT INTO blueprinted_documents (namespace, key, value, expires_at)
        VALUES ($1, $2, $3::jsonb, $4)
        ON CONFLICT (namespace, key) DO UPDATE
        SET value = EXCLUDED.value, expires_at = EXCLUDED.expires_at, updated_at = NOW()`,
@@ -109,7 +123,7 @@ export class PostgresDocumentStore {
 
   async delete(namespace, key) {
     const result = await this.pool.query(
-      "DELETE FROM living_blueprint_documents WHERE namespace = $1 AND key = $2",
+      "DELETE FROM blueprinted_documents WHERE namespace = $1 AND key = $2",
       [namespace, key]
     );
     return result.rowCount > 0;
@@ -117,7 +131,7 @@ export class PostgresDocumentStore {
 
   async take(namespace, key) {
     const result = await this.pool.query(
-      `DELETE FROM living_blueprint_documents
+      `DELETE FROM blueprinted_documents
        WHERE namespace = $1 AND key = $2 AND (expires_at IS NULL OR expires_at > NOW())
        RETURNING value`,
       [namespace, key]
@@ -127,7 +141,7 @@ export class PostgresDocumentStore {
 
   async list(namespace) {
     const result = await this.pool.query(
-      `SELECT key, value FROM living_blueprint_documents
+      `SELECT key, value FROM blueprinted_documents
        WHERE namespace = $1 AND (expires_at IS NULL OR expires_at > NOW())
        ORDER BY updated_at DESC`,
       [namespace]
@@ -137,7 +151,7 @@ export class PostgresDocumentStore {
 
   async prune() {
     await this.pool.query(
-      "DELETE FROM living_blueprint_documents WHERE expires_at IS NOT NULL AND expires_at <= NOW()"
+      "DELETE FROM blueprinted_documents WHERE expires_at IS NOT NULL AND expires_at <= NOW()"
     );
   }
 }

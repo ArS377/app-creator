@@ -1,5 +1,5 @@
 const contract = `
-Living Blueprint observation contract:
+BluePrinted observation contract:
 - Keep the existing tracing bridge and stable lb IDs if this app started from a source Repl.
 - Use React for the interface and Express for server routes. Use PostgreSQL and ws only when the requested product needs them.
 - Give important UI actions, route templates, tables, AI calls, and WebSocket channels deterministic IDs.
@@ -19,7 +19,7 @@ Project identity:
 - observation module: ${identifiers.controlOrigin}/bridge/v1.js
 - observation control origin: ${identifiers.controlOrigin}
 
-Import createLivingBlueprintBridge from the observation module in the browser entry point. Initialize it with { projectId: "${identifiers.appId}", controlOrigin: "${identifiers.controlOrigin}" }. Wrap only important user actions. The module contains no credential and stays inactive until the user pairs the runtime.
+Import createBluePrintedBridge from the observation module in the browser entry point. Initialize it with { projectId: "${identifiers.appId}", controlOrigin: "${identifiers.controlOrigin}" }. Wrap only important user actions. The module contains no credential and stays inactive until the user pairs the runtime.
 
 Build the requested product first. Treat observation as a small supporting layer, not the visual theme of the app.`;
 }

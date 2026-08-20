@@ -19,9 +19,9 @@ test("production refuses to start without durable encrypted state", () => {
 test("a Replit deployment domain supplies the public origin", () => {
   const config = loadRuntimeConfig({
     REPLIT_DEPLOYMENT: "1",
-    REPLIT_DOMAINS: "living-blueprint.replit.app",
+    REPLIT_DOMAINS: "blueprinted.replit.app",
     SESSION_SECRET: "a-production-secret-that-is-long-enough",
     DATABASE_URL: "postgres://example"
   });
-  assert.equal(config.publicOrigin, "https://living-blueprint.replit.app");
+  assert.equal(config.publicOrigin, "https://blueprinted.replit.app");
 });

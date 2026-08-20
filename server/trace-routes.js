@@ -38,7 +38,7 @@ export function createTraceRouter(options) {
   router.post("/api/projects/:projectId/pairings", asyncRoute(async (request, response) => {
     const input = pairingSchema.parse(request.body);
     const pairing = await options.pairings.issue(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId,
       input.runtimeUrl
     );
@@ -51,7 +51,7 @@ export function createTraceRouter(options) {
 
   router.delete("/api/projects/:projectId/pairings", asyncRoute(async (request, response) => {
     await options.pairings.revokeProject(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId
     );
     response.status(204).end();
@@ -71,7 +71,7 @@ export function createTraceRouter(options) {
 
   router.get("/api/projects/:projectId/traces", asyncRoute(async (request, response) => {
     const project = await options.repository.get(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId
     );
     if (!project) {
@@ -87,7 +87,7 @@ export function createTraceRouter(options) {
 
   router.get("/api/projects/:projectId/traces/:traceId", asyncRoute(async (request, response) => {
     const project = await options.repository.get(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId
     );
     if (!project) {

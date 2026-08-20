@@ -30,11 +30,11 @@ export function createProjectRouter(projects, options = {}) {
   const router = Router();
 
   router.get("/api/projects", asyncRoute(async (request, response) => {
-    response.json({ projects: await projects.list(request.livingBlueprintSession.id) });
+    response.json({ projects: await projects.list(request.bluePrintedSession.id) });
   }));
 
   router.get("/api/projects/:projectId", asyncRoute(async (request, response) => {
-    const project = await projects.detail(request.livingBlueprintSession.id, request.params.projectId);
+    const project = await projects.detail(request.bluePrintedSession.id, request.params.projectId);
     if (!project) {
       response.status(404).json({ error: "Project not found." });
       return;
@@ -45,7 +45,7 @@ export function createProjectRouter(projects, options = {}) {
   router.post("/api/projects", asyncRoute(async (request, response) => {
     const input = createSchema.parse(request.body);
     const project = await projects.create(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin),
       input
     );
@@ -55,7 +55,7 @@ export function createProjectRouter(projects, options = {}) {
   router.post("/api/projects/:projectId/update", asyncRoute(async (request, response) => {
     const input = updateSchema.parse(request.body);
     const project = await projects.update(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin),
       request.params.projectId,
       input.changeDescription
@@ -65,7 +65,7 @@ export function createProjectRouter(projects, options = {}) {
 
   router.post("/api/projects/:projectId/inspect", asyncRoute(async (request, response) => {
     const project = await projects.inspect(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
@@ -74,7 +74,7 @@ export function createProjectRouter(projects, options = {}) {
 
   router.post("/api/projects/:projectId/publish", asyncRoute(async (request, response) => {
     const project = await projects.publish(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
@@ -83,7 +83,7 @@ export function createProjectRouter(projects, options = {}) {
 
   router.post("/api/projects/:projectId/publish-status", asyncRoute(async (request, response) => {
     const project = await projects.refreshPublication(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin),
       request.params.projectId
     );
@@ -92,13 +92,13 @@ export function createProjectRouter(projects, options = {}) {
 
   router.delete("/api/projects/:projectId", asyncRoute(async (request, response) => {
     await options.pairings?.revokeProject(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId
     ).catch((error) => {
       if (!/not found/i.test(error.message)) throw error;
     });
     const removed = await projects.repository.remove(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       request.params.projectId
     );
     response.status(removed ? 204 : 404).end();
@@ -106,7 +106,7 @@ export function createProjectRouter(projects, options = {}) {
 
   router.get("/api/replit/apps", asyncRoute(async (request, response) => {
     response.json({ apps: await projects.listReplitApps(
-      request.livingBlueprintSession.id,
+      request.bluePrintedSession.id,
       redirectUrl(request, options.publicOrigin)
     ) });
   }));

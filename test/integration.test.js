@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { WebSocket } from "ws";
 
-import { createLivingBlueprintServer } from "../server.js";
+import { createBluePrintedServer } from "../server.js";
 
 function fakeReplit() {
   return {
@@ -52,7 +52,7 @@ function waitForPacket(socket, type) {
 }
 
 test("the HTTP and WebSocket boundary carries a paired runtime event", async (context) => {
-  const server = await createLivingBlueprintServer({
+  const server = await createBluePrintedServer({
     replit: fakeReplit(),
     config: {
       production: false,

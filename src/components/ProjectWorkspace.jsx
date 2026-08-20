@@ -74,7 +74,7 @@ export function ProjectWorkspace({
 
   function openRuntime() {
     if (!project.runtimeUrl) return;
-    runtimeWindow.current = window.open(project.runtimeUrl, `living-blueprint-${project.id}`);
+    runtimeWindow.current = window.open(project.runtimeUrl, `blueprinted-${project.id}`);
   }
 
   function submitUpdate(event) {
@@ -143,7 +143,7 @@ export function ProjectWorkspace({
               <section className="manifest-empty">
                 <span className="eyebrow">Blueprint pending</span>
                 <h2>Let Replit finish, then inspect the build.</h2>
-                <p>Living Blueprint will ask Agent for a strict architecture manifest. It will not fill the map with guessed progress while Agent is working.</p>
+                <p>BluePrinted will ask Agent for a strict architecture manifest. It will not fill the map with guessed progress while Agent is working.</p>
                 <ol>
                   <li className={project.replId ? "is-done" : ""}><span>01</span> Replit project returned</li>
                   <li><span>02</span> Agent finishes the app</li>
@@ -206,7 +206,7 @@ export function ProjectWorkspace({
                 </div>
                 <button type="button" onClick={() => {
                   if (window.confirm("Remove this blueprint and its stored traces? The Replit app will stay in your workspace.")) onDelete();
-                }}>Remove from Living Blueprint</button>
+                }}>Remove from BluePrinted</button>
               </div>
             </section>
           )}
@@ -231,7 +231,7 @@ export function ProjectWorkspace({
           <form className="update-sheet" onSubmit={submitUpdate}>
             <span className="eyebrow">Prompt update</span>
             <h2>What should change?</h2>
-            <p>Replit edits the current app. Living Blueprint keeps this version's map and traces before asking for a new snapshot.</p>
+            <p>Replit edits the current app. BluePrinted keeps this version's map and traces before asking for a new snapshot.</p>
             <textarea value={change} onChange={(event) => setChange(event.target.value)} minLength={10} maxLength={3000} placeholder="Add shared collections so two people can organize findings together." required autoFocus />
             <footer>
               <button className="button button-paper" type="button" onClick={() => setShowUpdate(false)}>Cancel</button>

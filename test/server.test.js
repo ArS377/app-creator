@@ -5,10 +5,10 @@ import { createSessionStore, parseCookies } from "../server.js";
 import { MemoryDocumentStore } from "../server/document-store.js";
 import { createPersistentSessionStore } from "../server/session-store.js";
 
-test("cookie parsing handles a session among unrelated values", () => {
-  assert.deepEqual(parseCookies("theme=paper; living_blueprint_session=abc123; seen=yes"), {
+test("cookie parsing handles a BluePrinted session among unrelated values", () => {
+  assert.deepEqual(parseCookies("theme=paper; blueprinted_session=abc123; seen=yes"), {
     theme: "paper",
-    living_blueprint_session: "abc123",
+    blueprinted_session: "abc123",
     seen: "yes"
   });
 });
@@ -18,7 +18,7 @@ test("anonymous sessions are isolated and reusable", () => {
   const store = createSessionStore({ now: () => currentTime });
   const first = store.ensure();
   const second = store.ensure();
-  const repeated = store.ensure(`living_blueprint_session=${first.id}`);
+  const repeated = store.ensure(`blueprinted_session=${first.id}`);
 
   assert.notEqual(first.id, second.id);
   assert.equal(repeated.id, first.id);
@@ -52,10 +52,21 @@ test("document-backed sessions survive a new store instance", async () => {
   const firstStore = createPersistentSessionStore(documents);
   const first = await firstStore.ensure();
   const restartedStore = createPersistentSessionStore(documents);
-  const restored = await restartedStore.ensure(`living_blueprint_session=${first.id}`);
+  const restored = await restartedStore.ensure(`blueprinted_session=${first.id}`);
 
   assert.equal(restored.id, first.id);
   assert.equal(restored.isNew, false);
+});
+
+test("legacy session cookies are accepted and marked for replacement", async () => {
+  const documents = new MemoryDocumentStore();
+  const store = createPersistentSessionStore(documents);
+  const first = await store.ensure();
+  const restored = await store.ensure(`living_blueprint_session=${first.id}`);
+
+  assert.equal(restored.id, first.id);
+  assert.equal(restored.isNew, false);
+  assert.equal(restored.shouldRefreshCookie, true);
 });
 
 test("document-backed investigator limits stay scoped to one session", async () => {

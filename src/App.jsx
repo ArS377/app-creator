@@ -218,7 +218,7 @@ export function App() {
       await api.delete(`/api/projects/${project.id}`);
       await loadProjects();
       return true;
-    }, "Project data removed from Living Blueprint.");
+    }, "Project data removed from BluePrinted.");
     if (removed) setScreen("sample");
   }
 
@@ -252,9 +252,9 @@ export function App() {
     <div className="app-shell">
       <a className="skip-link" href="#main-content">Skip to workspace</a>
       <header className="topbar">
-        <button className="brand" type="button" onClick={() => setScreen("sample")} aria-label="Living Blueprint sample">
+        <button className="brand" type="button" onClick={() => setScreen("sample")} aria-label="BluePrinted sample">
           <MarkIcon />
-          <span>Living Blueprint</span>
+          <span>BluePrinted</span>
         </button>
         <nav className="primary-nav" aria-label="Primary navigation">
           <button className={screen === "sample" ? "is-active" : ""} type="button" onClick={() => setScreen("sample")}>Sample</button>

@@ -5,7 +5,7 @@ const steps = [
     number: "01",
     label: "Describe",
     title: "Start with an app, not a diagram.",
-    body: "Write the product you want. Living Blueprint asks Replit to build a working app and keeps the editor link it returns.",
+    body: "Write the product you want. BluePrinted asks Replit to build a working app and keeps the editor link it returns.",
     output: "Output: a real Replit app you can open and publish."
   },
   {
@@ -40,7 +40,7 @@ export function Tutorial({ open, step, onStep, onClose }) {
         <header className="tutorial-head">
           <div>
             <span className="eyebrow">Sixty-second tour</span>
-            <strong>What comes out of Living Blueprint</strong>
+            <strong>What comes out of BluePrinted</strong>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close tutorial">
             <CloseIcon />

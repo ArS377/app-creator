@@ -1,7 +1,16 @@
 import { randomUUID } from "node:crypto";
 
-export const sessionCookieName = "living_blueprint_session";
+export const sessionCookieName = "blueprinted_session";
+const legacySessionCookieName = "living_blueprint_session";
 const sessionIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function sessionCandidate(cookieHeader) {
+  const cookies = parseCookies(cookieHeader);
+  return {
+    id: cookies[sessionCookieName] || cookies[legacySessionCookieName],
+    shouldRefreshCookie: !cookies[sessionCookieName] && Boolean(cookies[legacySessionCookieName])
+  };
+}
 
 export function parseCookies(cookieHeader = "") {
   return Object.fromEntries(
@@ -29,18 +38,19 @@ export function createSessionStore(options = {}) {
   const sessions = new Map();
 
   function ensure(cookieHeader = "") {
-    const candidateId = parseCookies(cookieHeader)[sessionCookieName];
+    const candidate = sessionCandidate(cookieHeader);
+    const candidateId = candidate.id;
     const existing = sessionIdPattern.test(candidateId || "") ? sessions.get(candidateId) : null;
     const currentTime = now();
 
     if (existing && existing.expiresAt > currentTime) {
       existing.expiresAt = currentTime + ttlMs;
-      return { id: candidateId, isNew: false };
+      return { id: candidateId, isNew: false, shouldRefreshCookie: candidate.shouldRefreshCookie };
     }
 
     const id = randomUUID();
     sessions.set(id, { expiresAt: currentTime + ttlMs, investigatorCalls: [] });
-    return { id, isNew: true };
+    return { id, isNew: true, shouldRefreshCookie: false };
   }
 
   function consumeInvestigatorCall(id) {
@@ -79,21 +89,22 @@ export function createPersistentSessionStore(documentStore, options = {}) {
   const now = options.now || Date.now;
 
   async function ensure(cookieHeader = "") {
-    const candidateId = parseCookies(cookieHeader)[sessionCookieName];
+    const candidate = sessionCandidate(cookieHeader);
+    const candidateId = candidate.id;
     const currentTime = now();
     if (sessionIdPattern.test(candidateId || "")) {
       const existing = await documentStore.get("sessions", candidateId);
       if (existing && existing.expiresAt > currentTime) {
         existing.expiresAt = currentTime + ttlMs;
         await documentStore.put("sessions", candidateId, existing, { expiresAt: existing.expiresAt });
-        return { id: candidateId, isNew: false };
+        return { id: candidateId, isNew: false, shouldRefreshCookie: candidate.shouldRefreshCookie };
       }
     }
 
     const id = randomUUID();
     const session = { expiresAt: currentTime + ttlMs, investigatorCalls: [] };
     await documentStore.put("sessions", id, session, { expiresAt: session.expiresAt });
-    return { id, isNew: true };
+    return { id, isNew: true, shouldRefreshCookie: false };
   }
 
   async function consumeInvestigatorCall(id) {

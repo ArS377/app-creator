@@ -13,7 +13,7 @@ export class ReplitOAuthProvider {
 
   get clientMetadata() {
     return {
-      client_name: "Living Blueprint",
+      client_name: "BluePrinted",
       client_uri: "https://github.com/ArS377/app-creator",
       redirect_uris: [String(this.redirectUrl)],
       grant_types: ["authorization_code", "refresh_token"],

@@ -44,7 +44,7 @@ export function attachTraceWebSocket(server, options) {
 
   server.on("upgrade", async (request, socket, head) => {
     try {
-      const url = new URL(request.url || "/", "http://living-blueprint.local");
+      const url = new URL(request.url || "/", "http://blueprinted.local");
       if (url.pathname !== "/ws/traces" && url.pathname !== "/ws/view") return;
 
       let context;

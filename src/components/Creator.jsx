@@ -22,7 +22,7 @@ export function Creator({ connected, busy, onCreate, onConnect }) {
         <span className="eyebrow">New blueprint</span>
         <h1 id="creator-title">Build an app you can look inside.</h1>
         <p>
-          Replit makes the app. Living Blueprint keeps its architecture and runtime behavior readable as it changes.
+          Replit makes the app. BluePrinted keeps its architecture and runtime behavior readable as it changes.
         </p>
       </header>
 
